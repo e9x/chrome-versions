@@ -23,8 +23,6 @@ const testBuild = (build: cros_build): cros_build => {
   return build;
 };
 
-let chromeTeamHappy: Date[] = [];
-
 async function* getBlogspot(blogId: string) {
   // if a version is released while we're scraping
   const start = new Date();
@@ -104,7 +102,15 @@ async function* getBlogspot(blogId: string) {
             );
 
             if (res) {
-              // we only got the chrome release and channel...
+              const [, channel, chrome] = res;
+
+              /*yield testBuild({
+                channel: channelNameToId(channel),
+                platform,
+                chrome,
+                date,
+              });*/
+
               continue;
             }
           }
@@ -115,8 +121,6 @@ async function* getBlogspot(blogId: string) {
             );
 
             if (res) {
-              chromeTeamHappy.push(new Date(post.published));
-
               const [, channel, chrome, platform] = res;
 
               yield testBuild({
@@ -136,8 +140,6 @@ async function* getBlogspot(blogId: string) {
             );
 
             if (res) {
-              chromeTeamHappy.push(new Date(post.published));
-
               const [, channel, platform, chrome] = res;
 
               yield testBuild({
@@ -157,8 +159,6 @@ async function* getBlogspot(blogId: string) {
             );
 
             if (res) {
-              chromeTeamHappy.push(new Date(post.published));
-
               const [, chrome, platform, channel] = res;
 
               yield testBuild({
@@ -178,8 +178,6 @@ async function* getBlogspot(blogId: string) {
             );
 
             if (res) {
-              chromeTeamHappy.push(new Date(post.published));
-
               const [, channel, chrome, platform] = res;
 
               yield testBuild({
@@ -199,8 +197,6 @@ async function* getBlogspot(blogId: string) {
             );
 
             if (res) {
-              chromeTeamHappy.push(new Date(post.published));
-
               const [, channel, chrome] = res;
 
               const platforms: string[] = [];
@@ -358,6 +354,8 @@ async function* getBlogspot(blogId: string) {
             if (res) {
               const [, channel, chrome, platform] = res;
 
+              // chrome is whole number
+
               yield testBuild({
                 channel: channelNameToId(channel),
                 platform,
@@ -451,11 +449,6 @@ const insert = db.prepare<
 const builds: cros_build[] = [];
 
 for await (const build of getBlogspot("8982037438137564684")) {
-  if (!build.chrome) {
-    console.trace(build, "found");
-    throw "wtf";
-  }
-
   builds.push(build);
 }
 
@@ -465,13 +458,3 @@ const insertMany = db.transaction((builds: cros_build[]) => {
 });
 
 insertMany(builds);
-
-/*console.log(
-  "The Google Chrome team was happy exactly",
-  chromeTeamHappy.length,
-  "times."
-);
-
-for (const time of chromeTeamHappy) {
-  console.log(`${time.toISOString()} - The Google Chrome team was happy.`);
-}*/
