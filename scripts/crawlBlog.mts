@@ -101,10 +101,12 @@ async function* getBlogspot(blogId: string) {
               /the (stable|beta|dev) channel has been updated to ([\d.]+) for windows, mac, (?:and linux|linux,)/i
             );
 
-            if (res) {
-              const [, channel, chrome] = res;
+            // we are missing platform!
 
-              /*yield testBuild({
+            if (res) {
+              /*const [, channel, chrome] = res;
+
+              yield testBuild({
                 channel: channelNameToId(channel),
                 platform,
                 chrome,
