@@ -14,7 +14,11 @@ export interface cros_recovery_image {
   board: string;
   /** CrOS platform version (e.g. 15117.41.0) */
   platform: string;
-  /** Mass production (MP) keys - secret keys */
+  /**
+   * Mass production (MP) keys - secret keys. When mp_key === 1, it's version will not be specified in a URL.
+   * Anything higher than 1 will show as mp-v$
+   * MP keys will always start at 1.
+   */
   mp_key: number;
   channel: cros_channel;
 }
