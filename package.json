@@ -5,7 +5,8 @@
   "type": "commonjs",
   "scripts": {
     "init": "ts-node-esm scripts/initDatabase.mts",
-    "crawlBlog": "ts-node-esm scripts/crawlBlog.mts"
+    "crawlBlog": "ts-node-esm scripts/crawlBlog.mts",
+    "crawlDash": "ts-node-esm scripts/crawlDash.mts"
   },
   "author": "",
   "license": "ISC",

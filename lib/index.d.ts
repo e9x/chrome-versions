@@ -25,8 +25,6 @@ export interface cros_build {
   /** Chrome version (e.g. 107.0.5304.32) */
   chrome: string;
   channel: cros_channel;
-  /* Date released in ISO format */
-  date: string;
 }
 
 /**

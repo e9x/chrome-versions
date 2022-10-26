@@ -29,8 +29,8 @@ db.exec(`CREATE TABLE cros_recovery_image (
 db.exec(`CREATE TABLE cros_build (
   platform TEXT NOT NULL,
   chrome TEXT NOT NULL,
-  date TEXT NOT NULL,
-  channel TEXT NOT NULL CHECK(channel = 'stable-channel' OR channel = 'beta-channel' OR channel = 'dev-channel')
+  channel TEXT NOT NULL CHECK(channel = 'stable-channel' OR channel = 'beta-channel' OR channel = 'dev-channel'),
+  UNIQUE(platform, chrome, channel)
 );`);
 
 console.log("Database initialized.");

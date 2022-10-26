@@ -51,7 +51,6 @@ async function* getBlogspot(blogId: string) {
 
     if (data.items)
       for (const post of data.items.reverse()) {
-        const date = new Date(post.published).toISOString();
         const content = stripHtml(post.content).result.replace(/\s+/g, " ");
         const title = post.title.replace(/\s+/g, " ");
 
@@ -83,7 +82,6 @@ async function* getBlogspot(blogId: string) {
                 channel: "stable-channel",
                 platform,
                 chrome,
-                date,
               });
 
               continue;
@@ -110,7 +108,6 @@ async function* getBlogspot(blogId: string) {
                 channel: channelNameToId(channel),
                 platform,
                 chrome,
-                date,
               });*/
 
               continue;
@@ -129,7 +126,6 @@ async function* getBlogspot(blogId: string) {
                 channel: channelNameToId(channel),
                 platform,
                 chrome,
-                date,
               });
 
               continue;
@@ -148,7 +144,6 @@ async function* getBlogspot(blogId: string) {
                 channel: channelNameToId(channel),
                 platform,
                 chrome,
-                date,
               });
 
               continue;
@@ -167,7 +162,6 @@ async function* getBlogspot(blogId: string) {
                 channel: channelNameToId(channel),
                 platform,
                 chrome,
-                date,
               });
 
               continue;
@@ -186,7 +180,6 @@ async function* getBlogspot(blogId: string) {
                 channel: channelNameToId(channel),
                 platform,
                 chrome,
-                date,
               });
 
               continue;
@@ -216,7 +209,6 @@ async function* getBlogspot(blogId: string) {
                   channel: channelNameToId(channel),
                   platform,
                   chrome,
-                  date,
                 });
 
               continue;
@@ -243,7 +235,6 @@ async function* getBlogspot(blogId: string) {
                   channel: channelNameToId(channel),
                   platform,
                   chrome,
-                  date,
                 });
 
               continue;
@@ -270,7 +261,6 @@ async function* getBlogspot(blogId: string) {
                   channel: channelNameToId(channel),
                   platform,
                   chrome,
-                  date,
                 });
 
               continue;
@@ -290,7 +280,6 @@ async function* getBlogspot(blogId: string) {
                 channel: channelNameToId(channel),
                 platform,
                 chrome,
-                date,
               });
 
               continue;
@@ -319,7 +308,6 @@ async function* getBlogspot(blogId: string) {
                   channel: channelNameToId(channel),
                   platform,
                   chrome,
-                  date,
                 });
 
               continue;
@@ -339,7 +327,6 @@ async function* getBlogspot(blogId: string) {
                 channel: channelNameToId(channel),
                 platform,
                 chrome,
-                date,
               });
 
               continue;
@@ -362,7 +349,6 @@ async function* getBlogspot(blogId: string) {
                 channel: channelNameToId(channel),
                 platform,
                 chrome,
-                date,
               });
 
               continue;
@@ -382,7 +368,6 @@ async function* getBlogspot(blogId: string) {
                 channel: channelNameToId(channel),
                 platform,
                 chrome,
-                date,
               });
 
               continue;
@@ -421,7 +406,6 @@ async function* getBlogspot(blogId: string) {
                   channel,
                   chrome,
                   platform,
-                  date,
                 });
             }
           }
@@ -441,11 +425,10 @@ const insert = db.prepare<
   [
     platform: cros_build["platform"],
     chrome: cros_build["chrome"],
-    channel: cros_build["channel"],
-    date: cros_build["date"]
+    channel: cros_build["channel"]
   ]
 >(
-  "INSERT INTO cros_build (platform, chrome, channel, date) VALUES (?, ?, ?, ?);"
+  "INSERT OR IGNORE INTO cros_build (platform, chrome, channel) VALUES (?, ?, ?);"
 );
 
 const builds: cros_build[] = [];
@@ -456,7 +439,7 @@ for await (const build of getBlogspot("8982037438137564684")) {
 
 const insertMany = db.transaction((builds: cros_build[]) => {
   for (const build of builds)
-    insert.run(build.platform, build.chrome, build.channel, build.date);
+    insert.run(build.platform, build.chrome, build.channel);
 });
 
 insertMany(builds);
