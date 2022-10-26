@@ -23,14 +23,14 @@ db.exec(`CREATE TABLE cros_recovery_image (
   platform TEXT NOT NULL,
   mp_key INT NOT NULL,
   channel TEXT NOT NULL CHECK(channel = 'stable-channel' OR channel = 'beta-channel' OR channel = 'dev-channel'),
-  UNIQUE(board, platform, mp_key, channel)
+  UNIQUE(board, platform)
 );`);
 
 db.exec(`CREATE TABLE cros_build (
   platform TEXT NOT NULL,
   chrome TEXT NOT NULL,
   channel TEXT NOT NULL CHECK(channel = 'stable-channel' OR channel = 'beta-channel' OR channel = 'dev-channel'),
-  UNIQUE(platform, chrome, channel)
+  UNIQUE(platform)
 );`);
 
 console.log("Database initialized.");
