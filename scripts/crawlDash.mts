@@ -1,3 +1,6 @@
+/**
+ * Prefer running this script before the blog crawler!
+ */
 import { stripHtml } from "string-strip-html";
 import fetch from "node-fetch";
 import type { BloggerPostList } from "./Blogger";
