@@ -9,6 +9,7 @@
   },
   "license": "ISC",
   "type": "commonjs",
+  "main": "./lib/index.js",
   "exports": {
     ".": "./lib/index.js",
     "./db": "./lib/db.js"
