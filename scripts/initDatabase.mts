@@ -36,6 +36,12 @@ db.exec(`CREATE TABLE cros_target (
   UNIQUE(board)
 );`);
 
+db.exec(`CREATE TABLE cros_brand (
+  board TEXT NOT NULL,
+  brand TEXT NOT NULL,
+  UNIQUE(brand)
+);`);
+
 db.exec(`CREATE TABLE cros_build (
   platform TEXT NOT NULL,
   chrome TEXT NOT NULL,

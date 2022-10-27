@@ -39,6 +39,13 @@ export interface cros_recovery_image_db extends cros_recovery_image {
   last_modified?: string;
 }
 
+export interface cros_brand {
+  /** The name of the Chromebook model (e.g. Lenovo N22) */
+  brand: string;
+  /** Codename */
+  board: string;
+}
+
 export interface cros_target {
   /** Codename for the board/target */
   board: string;

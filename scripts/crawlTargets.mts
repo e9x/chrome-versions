@@ -2,7 +2,7 @@
  * Prefer running this script before the blog crawler!
  */
 import fetch from "node-fetch";
-import { cros_target, parseRecoveryURL } from "../lib/index.js";
+import { cros_brand, cros_target, parseRecoveryURL } from "../lib/index.js";
 import { chromeDBPath } from "../lib/db.js";
 import Database from "better-sqlite3";
 
@@ -53,6 +53,12 @@ const dataContainsModels = (
   data: FetchedModel | FetchedModels
 ): data is FetchedModels => "models" in data;
 
+const brands: cros_brand[] = [];
+
+const addBrands = (brandNames: string[], board: string) => {
+  for (const brand of brandNames) brands.push({ board, brand });
+};
+
 for (const board in json.builds) {
   const boardData = json.builds[board];
 
@@ -71,13 +77,18 @@ for (const board in json.builds) {
   };
 
   if (dataContainsModels(boardData))
-    for (const model in boardData.models)
-      for (const push in boardData.models[model].pushRecoveries)
-        readPushRecovery(boardData.models[model].pushRecoveries[push]);
-  else
+    for (const model in boardData.models) {
+      const modelData = boardData.models[model];
+      addBrands(modelData.brandNames, board);
+      for (const push in modelData.pushRecoveries)
+        readPushRecovery(modelData.pushRecoveries[push]);
+    }
+  else {
+    addBrands(boardData.brandNames, board);
     for (const push in boardData.pushRecoveries) {
       readPushRecovery(boardData.pushRecoveries[push]);
     }
+  }
 
   targets.push({
     board,
@@ -86,7 +97,7 @@ for (const board in json.builds) {
   });
 }
 
-const insert = db.prepare<
+const insertTarget = db.prepare<
   [
     board: cros_target["board"],
     mp_token: cros_target["mp_token"],
@@ -98,9 +109,17 @@ const insert = db.prepare<
 
 console.log("Found", targets.length, "targets");
 
-const insertMany = db.transaction((targets: cros_target[]) => {
+db.transaction(() => {
   for (const target of targets)
-    insert.run(target.board, target.mp_token, target.mp_key_max);
-});
+    insertTarget.run(target.board, target.mp_token, target.mp_key_max);
+})();
 
-insertMany(targets);
+const insertBrand = db.prepare<
+  [board: cros_brand["board"], brand: cros_brand["brand"]]
+>("INSERT OR IGNORE INTO cros_brand (board, brand) VALUES (?, ?);");
+
+console.log("Found", brands.length, "targets");
+
+db.transaction(() => {
+  for (const brand of brands) insertBrand.run(brand.board, brand.brand);
+})();
