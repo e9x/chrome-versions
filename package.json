@@ -6,7 +6,8 @@
   "scripts": {
     "init": "ts-node-esm scripts/initDatabase.mts",
     "crawlBlog": "ts-node-esm scripts/crawlBlog.mts",
-    "crawlDash": "ts-node-esm scripts/crawlDash.mts"
+    "crawlDash": "ts-node-esm scripts/crawlDash.mts",
+    "bruteforce": "ts-node-esm scripts/bruteforce.mts"
   },
   "author": "",
   "license": "ISC",
