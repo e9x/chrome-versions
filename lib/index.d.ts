@@ -20,6 +20,10 @@ export interface cros_recovery_image {
    * MP keys will always start at 1.
    */
   mp_key: number;
+  /**
+   * @see {cros_target["mp_token"]}
+   */
+  mp_token: string;
   channel: cros_channel;
 }
 
@@ -29,6 +33,21 @@ export interface cros_build {
   /** Chrome version (e.g. 107.0.5304.32) */
   chrome: string;
   channel: cros_channel;
+}
+
+export interface cros_target {
+  /** Codename for the board/target */
+  board: string;
+  // Knowing the mass production keys helps with bruteforcing recovery URLs, reducing the requests by 20x
+  /** The highest value of the mass-production keys */
+  mp_key_max: number;
+  /**
+   * Older boards have custom prefixes before `mp` in the URL. See https://dl.google.com/dl/edgedl/chromeos/recovery/chromeos_9334.72.0_x86-zgb-he_recovery_stable-channel_zgb-mp-v3.bin.zip
+   */
+  mp_token: string;
+  /** The lowest value of the mass-production keys */
+  // this is harder to find and unreasonable to expect for every board!
+  // mpMin: number;
 }
 
 /**
@@ -41,6 +60,7 @@ export const getRecoveryURL: (
   image: cros_recovery_image,
   secure?: boolean
 ) => string;
+
 /**
  *
  * @param url

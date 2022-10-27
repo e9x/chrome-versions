@@ -1,6 +1,10 @@
 import fetch from "node-fetch";
 import { chromeDBPath, getRecoveryURL } from "../lib/index.js";
-import type { cros_build, cros_recovery_image } from "../lib/index";
+import type {
+  cros_build,
+  cros_target,
+  cros_recovery_image,
+} from "../lib/index";
 import Database from "better-sqlite3";
 
 const db = new Database(chromeDBPath);
@@ -12,17 +16,6 @@ const stableBuilds = db
   .all() as cros_build[];
 
 console.log(`Found ${stableBuilds.length} builds...`);
-
-interface cros_target {
-  /** Codename for the board/target */
-  codename: string;
-  // Knowing the mass production keys helps with bruteforcing recovery URLs, reducing the requests by 20x
-  /** The highest value of the mass-production keys */
-  mpMax: number;
-  /** The lowest value of the mass-production keys */
-  // this is harder to find and unreasonable to expect for every board!
-  // mpMin: number;
-}
 
 function strategyExecute<T extends unknown>(
   times: number,
@@ -76,9 +69,10 @@ async function executeMP(
   mp_key: number
 ): Promise<Executed> {
   const image = {
-    board: target.codename,
+    board: target.board,
     platform: build.platform,
     mp_key,
+    mp_token: target.mp_token,
     channel: build.channel,
   } as cros_recovery_image;
 
@@ -98,18 +92,26 @@ async function executeMP(
 }
 
 // highest (4) -> lowest (1)
-const target: cros_target = {
-  codename: "reks",
+/*const target: cros_target = {
+  board: "reks",
   mpMax: 4,
-};
+};*/
 
-let lastMpKey = target.mpMax;
+const getTarget = db.prepare(
+  "SELECT * FROM cros_target WHERE board = 'reks' LIMIT 1;"
+);
 
-let datas: [
+const target = getTarget.get();
+
+let lastMpKey = target.mp_key_max;
+
+type SomeData = [
   lastModified: Date,
   image: cros_recovery_image,
   build: cros_build
-][] = [];
+];
+
+let datas: SomeData[] = [];
 
 for (const build of stableBuilds) {
   let gotData: Executed | undefined;
@@ -119,7 +121,7 @@ for (const build of stableBuilds) {
   } catch (err) {
     const keys: number[] = [];
 
-    for (let i = 0; i < target.mpMax; i++) keys.push(i + 1);
+    for (let i = 0; i < target.mp_key_max; i++) keys.push(i + 1);
 
     keys.splice(keys.indexOf(lastMpKey), 1);
 
@@ -139,11 +141,14 @@ for (const build of stableBuilds) {
 
   lastMpKey = gotData.image.mp_key;
 
-  datas.push([gotData.lastModified, gotData.image, build]);
+  logData([gotData.lastModified, gotData.image, build]);
 }
 
-for (const data of datas.sort((a, b) => a[0].getTime() - b[0].getTime())) {
+function logData(data: SomeData) {
   console.log(getRecoveryURL(data[1]));
   console.log(`# BUILD - Chrome v${data[2].chrome}`);
   console.log(`# IMAGE - Patched ${data[0].toISOString()}`);
 }
+
+for (const data of datas.sort((a, b) => a[0].getTime() - b[0].getTime()))
+  logData(data);

@@ -6,7 +6,6 @@ import iterateCSVRows from "./parseCSV.mjs";
 import { chromeDBPath } from "../lib/index.js";
 import type { cros_build, cros_channel } from "../lib/index";
 import Database from "better-sqlite3";
-import { createInterface } from "node:readline";
 
 const db = new Database(chromeDBPath);
 

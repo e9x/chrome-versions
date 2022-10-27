@@ -2,7 +2,9 @@ import { createInterface } from "node:readline";
 
 type csvRow = Record<string, string>;
 
-export default async function* iterateCSVRows(body: NodeJS.ReadableStream) {
+export default async function* iterateCSVRows<RowData = csvRow>(
+  body: NodeJS.ReadableStream
+) {
   const keys: string[] = [];
 
   let index = 0;
@@ -27,6 +29,6 @@ export default async function* iterateCSVRows(body: NodeJS.ReadableStream) {
       object[key] = values[i];
     }
 
-    yield object;
+    yield object as RowData;
   }
 }
