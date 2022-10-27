@@ -1,4 +1,6 @@
-export const chromeDBPath: string;
+/*
+ * This script contains libraries intended to be used in any JavaScript environment.
+ */
 
 /**
  * Release channel

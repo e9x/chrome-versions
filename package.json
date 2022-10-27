@@ -3,6 +3,10 @@
   "version": "1.0.0",
   "description": "",
   "type": "commonjs",
+  "exports": {
+    ".": "./lib/index.js",
+    "./db": "./lib/db.js"
+  },
   "scripts": {
     "init": "ts-node-esm scripts/initDatabase.mts",
     "crawlBlog": "ts-node-esm scripts/crawlBlog.mts",
