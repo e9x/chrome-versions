@@ -41,5 +41,11 @@ export const getRecoveryURL: (
   image: cros_recovery_image,
   secure?: boolean
 ) => string;
+/**
+ *
+ * @param url
+ * @returns Recovery image
+ */
+export const parseRecoveryURL: (url: string) => cros_recovery_image;
 
 export const isValidBuild: (build: unknown) => build is cros_build;
