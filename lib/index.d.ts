@@ -6,14 +6,20 @@ export const chromeDBPath: string;
  */
 export type cros_channel = "stable-channel" | "beta-channel" | "dev-channel";
 
+export interface cros_build {
+  /** CrOS platform version (e.g. 15117.41.0) */
+  platform: string;
+  /** Chrome version (e.g. 107.0.5304.32) */
+  chrome: string;
+  channel: cros_channel;
+}
+
 /**
  * @see {@link|https://www.chromium.org/chromium-os/firmware-porting-guide/2-concepts/#firmware-development}
  */
-export interface cros_recovery_image {
+export interface cros_recovery_image extends cros_build {
   /** Board codename */
   board: string;
-  /** CrOS platform version (e.g. 15117.41.0) */
-  platform: string;
   /**
    * Mass production (MP) keys - secret keys. When mp_key === 1, it's version will not be specified in a URL.
    * Anything higher than 1 will show as mp-v$
@@ -24,15 +30,11 @@ export interface cros_recovery_image {
    * @see {cros_target["mp_token"]}
    */
   mp_token: string;
-  channel: cros_channel;
 }
 
-export interface cros_build {
-  /** CrOS platform version (e.g. 15117.41.0) */
-  platform: string;
-  /** Chrome version (e.g. 107.0.5304.32) */
-  chrome: string;
-  channel: cros_channel;
+export interface cros_recovery_image_db extends cros_recovery_image {
+  /** ISO string of the `last-modified` header received when fetching the image. This is irrelevant unless the value is being read/written to a database. */
+  last_modified?: string;
 }
 
 export interface cros_target {

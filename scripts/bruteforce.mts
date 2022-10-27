@@ -4,10 +4,25 @@ import type {
   cros_build,
   cros_target,
   cros_recovery_image,
+  cros_recovery_image_db,
 } from "../lib/index";
 import Database from "better-sqlite3";
 
 const db = new Database(chromeDBPath);
+
+const [, , board] = process.argv;
+
+if (!board) throw new Error("Board must be specified (e.g. reks)");
+
+console.log("Builds may seem to be out of order, this is expected.");
+
+const getTarget = db.prepare(
+  "SELECT * FROM cros_target WHERE board = ? LIMIT 1;"
+);
+
+const target = getTarget.get(board);
+
+if (!target) throw new Error(`Cannot find target ${board}`);
 
 const stableBuilds = db
   .prepare<[]>(
@@ -68,13 +83,14 @@ async function executeMP(
   build: cros_build,
   mp_key: number
 ): Promise<Executed> {
-  const image = {
+  const image: cros_recovery_image = {
     board: target.board,
     platform: build.platform,
     mp_key,
     mp_token: target.mp_token,
     channel: build.channel,
-  } as cros_recovery_image;
+    chrome: build.chrome,
+  };
 
   const url = getRecoveryURL(image, false);
   const res = await fetch(url, { method: "HEAD" });
@@ -92,17 +108,6 @@ async function executeMP(
 }
 
 // highest (4) -> lowest (1)
-/*const target: cros_target = {
-  board: "reks",
-  mpMax: 4,
-};*/
-
-const getTarget = db.prepare(
-  "SELECT * FROM cros_target WHERE board = 'reks' LIMIT 1;"
-);
-
-const target = getTarget.get();
-
 let lastMpKey = target.mp_key_max;
 
 type SomeData = [
@@ -112,6 +117,8 @@ type SomeData = [
 ];
 
 let datas: SomeData[] = [];
+
+const recoveryImages: cros_recovery_image_db[] = [];
 
 for (const build of stableBuilds) {
   let gotData: Executed | undefined;
@@ -134,12 +141,17 @@ for (const build of stableBuilds) {
     }
   }
 
-  if (!gotData) {
-    // console.error("Couldn't find", build.chrome, build.platform);
-    continue;
-  }
+  if (!gotData) continue;
+  // console.error("Couldn't find", build.chrome, build.platform);
+
+  // success
 
   lastMpKey = gotData.image.mp_key;
+
+  recoveryImages.push({
+    ...gotData.image,
+    last_modified: gotData.lastModified.toISOString(),
+  });
 
   logData([gotData.lastModified, gotData.image, build]);
 }
@@ -150,5 +162,39 @@ function logData(data: SomeData) {
   console.log(`# IMAGE - Patched ${data[0].toISOString()}`);
 }
 
-for (const data of datas.sort((a, b) => a[0].getTime() - b[0].getTime()))
-  logData(data);
+console.log("Fetched images. Inserting...");
+
+// for (const data of datas.sort((a, b) => a[0].getTime() - b[0].getTime())) logData(data);
+
+/*await (
+  await import("node:fs/promises")
+).writeFile(`../dump-board-${board}.json`, JSON.stringify(recoveryImages));*/
+
+const insert = db.prepare<
+  [
+    board: cros_recovery_image_db["board"],
+    platform: cros_recovery_image_db["platform"],
+    chrome: cros_recovery_image_db["chrome"],
+    mp_token: cros_recovery_image_db["mp_token"],
+    mp_key: cros_recovery_image_db["mp_key"],
+    channel: cros_recovery_image_db["channel"],
+    last_modified: cros_recovery_image_db["last_modified"]
+  ]
+>(
+  "INSERT OR IGNORE INTO cros_recovery_image (board, platform, chrome, mp_token, mp_key, channel, last_modified) VALUES (?, ?, ?, ?, ?, ?);"
+);
+
+const insertMany = db.transaction((images: cros_recovery_image_db[]) => {
+  for (const image of images)
+    insert.run(
+      image.board,
+      image.platform,
+      image.chrome,
+      image.mp_token,
+      image.mp_key,
+      image.channel,
+      image.last_modified
+    );
+});
+
+insertMany(recoveryImages);

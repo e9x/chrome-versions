@@ -21,9 +21,11 @@ const db = new Database(chromeDBPath);
 db.exec(`CREATE TABLE cros_recovery_image (
   board TEXT NOT NULL,
   platform TEXT NOT NULL,
+  chrome TEXT NOT NULL,
   mp_token TEXT NOT NULL,
   mp_key INT NOT NULL,
   channel TEXT NOT NULL CHECK(channel = 'stable-channel' OR channel = 'beta-channel' OR channel = 'dev-channel'),
+  last_modified TEXT NOT NULL,
   UNIQUE(board, platform)
 );`);
 
