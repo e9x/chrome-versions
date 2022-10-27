@@ -2,6 +2,12 @@
   "name": "chrome-versions",
   "version": "1.0.0",
   "description": "",
+  "author": "SystemYA",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/sysce/chrome-versions.git"
+  },
+  "license": "ISC",
   "type": "commonjs",
   "exports": {
     ".": "./lib/index.js",
@@ -13,8 +19,6 @@
     "crawlDash": "ts-node-esm scripts/crawlDash.mts",
     "bruteforce": "ts-node-esm scripts/bruteforce.mts"
   },
-  "author": "",
-  "license": "ISC",
   "devDependencies": {
     "@types/better-sqlite3": "^7.6.2",
     "@typescript-eslint/parser": "^5.40.1",
