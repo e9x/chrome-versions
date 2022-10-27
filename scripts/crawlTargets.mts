@@ -89,7 +89,7 @@ for (const board in json.builds) {
 const insert = db.prepare<
   [
     board: cros_target["board"],
-    mp_tokne: cros_target["mp_token"],
+    mp_token: cros_target["mp_token"],
     mp_key_max: cros_target["mp_key_max"]
   ]
 >(
