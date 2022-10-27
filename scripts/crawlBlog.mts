@@ -1,10 +1,10 @@
-import { stripHtml } from "string-strip-html";
-import fetch from "node-fetch";
-import type { BloggerPostList } from "./Blogger";
-import { isValidBuild } from "../lib/index.js";
 import { chromeDBPath } from "../lib/db.js";
 import type { cros_build, cros_channel } from "../lib/index";
+import { isValidBuild } from "../lib/index.js";
+import type { BloggerPostList } from "./Blogger";
 import Database from "better-sqlite3";
+import fetch from "node-fetch";
+import { stripHtml } from "string-strip-html";
 
 const db = new Database(chromeDBPath);
 

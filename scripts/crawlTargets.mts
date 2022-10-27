@@ -1,10 +1,11 @@
 /**
  * Prefer running this script before the blog crawler!
  */
-import fetch from "node-fetch";
-import { cros_brand, cros_target, parseRecoveryURL } from "../lib/index.js";
+
 import { chromeDBPath } from "../lib/db.js";
+import { cros_brand, cros_target, parseRecoveryURL } from "../lib/index.js";
 import Database from "better-sqlite3";
+import fetch from "node-fetch";
 
 const db = new Database(chromeDBPath);
 

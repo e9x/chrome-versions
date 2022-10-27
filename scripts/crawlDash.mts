@@ -1,11 +1,12 @@
 /**
  * Prefer running this script before the blog crawler!
  */
-import fetch from "node-fetch";
-import iterateCSVRows from "./parseCSV.mjs";
+
 import { chromeDBPath } from "../lib/db.js";
 import type { cros_build, cros_channel } from "../lib/index";
+import iterateCSVRows from "./parseCSV.mjs";
 import Database from "better-sqlite3";
+import fetch from "node-fetch";
 
 const db = new Database(chromeDBPath);
 

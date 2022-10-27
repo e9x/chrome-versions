@@ -1,6 +1,6 @@
-import fetch from "node-fetch";
-import { getRecoveryURL } from "../lib/index.js";
 import type { cros_recovery_image } from "../lib/index";
+import { getRecoveryURL } from "../lib/index.js";
+import fetch from "node-fetch";
 
 interface ResolvedData {
   image: cros_recovery_image;

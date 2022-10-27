@@ -1,5 +1,3 @@
-import fetch from "node-fetch";
-import { getRecoveryURL } from "../lib/index.js";
 import { chromeDBPath } from "../lib/db.js";
 import type {
   cros_build,
@@ -7,7 +5,9 @@ import type {
   cros_recovery_image,
   cros_recovery_image_db,
 } from "../lib/index";
+import { getRecoveryURL } from "../lib/index.js";
 import Database from "better-sqlite3";
+import fetch from "node-fetch";
 
 const db = new Database(chromeDBPath);
 
