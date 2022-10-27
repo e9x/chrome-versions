@@ -181,7 +181,7 @@ const insert = db.prepare<
     last_modified: cros_recovery_image_db["last_modified"]
   ]
 >(
-  "INSERT OR IGNORE INTO cros_recovery_image (board, platform, chrome, mp_token, mp_key, channel, last_modified) VALUES (?, ?, ?, ?, ?, ?);"
+  "INSERT OR IGNORE INTO cros_recovery_image (board, platform, chrome, mp_token, mp_key, channel, last_modified) VALUES (?, ?, ?, ?, ?, ?, ?);"
 );
 
 const insertMany = db.transaction((images: cros_recovery_image_db[]) => {
