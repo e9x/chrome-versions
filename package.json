@@ -17,6 +17,7 @@
     "init": "ts-node-esm scripts/initDatabase.mts",
     "crawlBlog": "ts-node-esm scripts/crawlBlog.mts",
     "crawlDash": "ts-node-esm scripts/crawlDash.mts",
+    "crawlTargets": "ts-node-esm scripts/crawlTargets.mts",
     "bruteforce": "ts-node-esm scripts/bruteforce.mts"
   },
   "devDependencies": {
