@@ -1,7 +1,8 @@
 import { stripHtml } from "string-strip-html";
 import fetch from "node-fetch";
 import type { BloggerPostList } from "./Blogger";
-import { chromeDBPath, isValidBuild } from "../lib/index.js";
+import { isValidBuild } from "../lib/index.js";
+import { chromeDBPath } from "../lib/db.js";
 import type { cros_build, cros_channel } from "../lib/index";
 import Database from "better-sqlite3";
 

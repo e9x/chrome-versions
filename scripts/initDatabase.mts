@@ -1,5 +1,5 @@
 import Database from "better-sqlite3";
-import { chromeDBPath } from "../lib/index.js";
+import { chromeDBPath } from "../lib/db.js";
 import { mkdir, rm } from "node:fs/promises";
 import { dirname } from "node:path";
 

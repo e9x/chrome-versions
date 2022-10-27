@@ -1,5 +1,6 @@
 import fetch from "node-fetch";
-import { chromeDBPath, getRecoveryURL } from "../lib/index.js";
+import { getRecoveryURL } from "../lib/index.js";
+import { chromeDBPath } from "../lib/db.js";
 import type {
   cros_build,
   cros_target,
