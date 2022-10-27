@@ -33,4 +33,10 @@ db.exec(`CREATE TABLE cros_build (
   UNIQUE(platform)
 );`);
 
+db.exec(`CREATE TABLE cros_target (
+  codename TEXT NOT NULL,
+  mp_key_max INT NOT NULL,
+  UNIQUE(codename)
+);`);
+
 console.log("Database initialized.");
