@@ -33,17 +33,17 @@ const stableBuilds = db
 
 console.log(`Found ${stableBuilds.length} builds...`);
 
-function strategyExecute<T extends unknown>(
+function strategyExecute<T>(
   times: number,
   execute: (i: number) => Promise<T>
 ): AsyncGenerator<PromiseSettledResult<Awaited<T>>>;
 
-function strategyExecute<T extends unknown, Data extends unknown>(
+function strategyExecute<T, Data extends unknown>(
   times: Data[],
   execute: (data: Data) => Promise<T>
 ): AsyncGenerator<PromiseSettledResult<Awaited<T>>>;
 
-async function* strategyExecute<T extends unknown, Data extends unknown>(
+async function* strategyExecute<T, Data>(
   times: number | Data[],
   execute: (i: number | Data) => Promise<T>
 ) {
@@ -117,8 +117,6 @@ type SomeData = [
   build: cros_build
 ];
 
-let datas: SomeData[] = [];
-
 const recoveryImages: cros_recovery_image_db[] = [];
 
 for (const build of stableBuilds) {
@@ -164,12 +162,6 @@ function logData(data: SomeData) {
 }
 
 console.log("Fetched images. Inserting...");
-
-// for (const data of datas.sort((a, b) => a[0].getTime() - b[0].getTime())) logData(data);
-
-/*await (
-  await import("node:fs/promises")
-).writeFile(`../dump-board-${board}.json`, JSON.stringify(recoveryImages));*/
 
 const insert = db.prepare<
   [

@@ -11,8 +11,14 @@
   "type": "commonjs",
   "main": "./lib/index.js",
   "exports": {
-    ".": "./lib/index.js",
-    "./db": "./lib/db.js"
+    ".": {
+      "node": "./lib/index.js",
+      "types": "./lib/index.d.ts"
+    },
+    "./db": {
+      "node": "./lib/db.js",
+      "types": "./lib/db.d.ts"
+    }
   },
   "scripts": {
     "init": "ts-node-esm scripts/initDatabase.mts",
@@ -23,6 +29,7 @@
   },
   "devDependencies": {
     "@types/better-sqlite3": "^7.6.2",
+    "@typescript-eslint/eslint-plugin": "^5.41.0",
     "@typescript-eslint/parser": "^5.40.1",
     "better-sqlite3": "^7.6.2",
     "eslint": "^8.26.0",
