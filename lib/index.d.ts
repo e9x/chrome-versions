@@ -80,3 +80,13 @@ export const getRecoveryURL: (
 export const parseRecoveryURL: (url: string) => cros_recovery_image;
 
 export const isValidBuild: (build: unknown) => build is cros_build;
+
+/**
+ * @see {@link|https://www.chromium.org/developers/version-numbers/}
+ */
+export const parseChromeVersion: (version: string) => [major: number, minor: number, build: number, patch: number];
+
+/**
+ * @see {@link|https://www.chromium.org/developers/version-numbers/}
+ */
+export const parsePlatformVersion: (version: string) => [tip: number,  build: number, subbranch: number];
