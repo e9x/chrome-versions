@@ -25,11 +25,19 @@ const target = getTarget.get(board);
 
 if (!target) throw new Error(`Cannot find target ${board}`);
 
-const stableBuilds = db
-  .prepare<[]>(
-    "SELECT * FROM cros_build WHERE channel = 'stable-channel' ORDER BY platform ASC;"
-  )
-  .all() as cros_build[];
+// Recovery images exist for M55+
+function someM55(build: cros_build) {
+  const [major] = build.chrome.split(".");
+  return Number(major) >= 55;
+}
+
+const stableBuilds = (
+  db
+    .prepare<[]>(
+      "SELECT * FROM cros_build WHERE channel = 'stable-channel' ORDER BY platform ASC;"
+    )
+    .all() as cros_build[]
+).filter(someM55);
 
 console.log(`Found ${stableBuilds.length} builds...`);
 
