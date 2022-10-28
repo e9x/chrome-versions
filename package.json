@@ -1,6 +1,6 @@
 {
   "name": "chrome-versions",
-  "version": "1.0.0-beta",
+  "version": "1.0.0-beta.1",
   "description": "",
   "author": "SystemYA",
   "repository": {
@@ -11,7 +11,9 @@
   "type": "module",
   "files": [
     "dist",
-    "lib"
+    "lib",
+    "db.d.ts",
+    "index.d.ts"
   ],
   "exports": {
     ".": {
