@@ -38,7 +38,7 @@ function strategyExecute<T>(
   execute: (i: number) => Promise<T>
 ): AsyncGenerator<PromiseSettledResult<Awaited<T>>>;
 
-function strategyExecute<T, Data extends unknown>(
+function strategyExecute<T, Data>(
   times: Data[],
   execute: (data: Data) => Promise<T>
 ): AsyncGenerator<PromiseSettledResult<Awaited<T>>>;

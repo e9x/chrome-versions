@@ -3,7 +3,8 @@
  */
 
 import { chromeDBPath } from "../lib/db.js";
-import { cros_brand, cros_target, parseRecoveryURL } from "../lib/index.js";
+import type { cros_brand, cros_target} from "../lib/index.js";
+import { parseRecoveryURL } from "../lib/index.js";
 import Database from "better-sqlite3";
 import fetch from "node-fetch";
 

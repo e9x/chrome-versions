@@ -4,7 +4,7 @@
 
 import { chromeDBPath } from "../lib/db.js";
 import type { cros_build, cros_channel } from "../lib/index";
-import iterateCSVRows from "./parseCSV.mjs";
+import iterateCSVRows from "./parseCSV.js";
 import Database from "better-sqlite3";
 import fetch from "node-fetch";
 
@@ -63,8 +63,10 @@ platforms: for (const platform in versions) {
   switch (versions[platform][0]) {
     case "dev":
       channel = "dev-channel";
+      break;
     case "beta":
       channel = "beta-channel";
+      break;
     case "canary":
       // we overlook canary builds, they're out of scope
       continue platforms;
