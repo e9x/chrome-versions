@@ -36,7 +36,7 @@ export interface cros_recovery_image extends cros_build {
 
 export interface cros_recovery_image_db extends cros_recovery_image {
   /** ISO string of the `last-modified` header received when fetching the image. This is irrelevant unless the value is being read/written to a database. */
-  last_modified?: string;
+  last_modified: string;
 }
 
 export interface cros_brand {
