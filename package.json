@@ -9,6 +9,11 @@
   },
   "license": "ISC",
   "type": "commonjs",
+  "files": [
+    "dist",
+    "lib",
+    "db.d.ts"
+  ],
   "main": "./lib/index.js",
   "exports": {
     ".": {
@@ -32,7 +37,6 @@
     "@types/better-sqlite3": "^7.6.2",
     "@typescript-eslint/eslint-plugin": "^5.41.0",
     "@typescript-eslint/parser": "^5.40.1",
-    "better-sqlite3": "^7.6.2",
     "eslint": "^8.26.0",
     "node-fetch": "^3.2.10",
     "prettier": "^2.7.1",
