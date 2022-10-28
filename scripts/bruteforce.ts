@@ -8,6 +8,7 @@ import type {
 import { getRecoveryURL } from "../lib/index.js";
 import Database from "better-sqlite3";
 import fetch from "node-fetch";
+import { Agent } from "node:http";
 
 const db = new Database(chromeDBPath);
 
@@ -87,6 +88,11 @@ interface Executed {
   lastModified: Date;
 }
 
+const agent = new Agent({
+  maxSockets: 10,
+  keepAlive: true,
+});
+
 async function executeMP(
   target: cros_target,
   build: cros_build,
@@ -102,7 +108,7 @@ async function executeMP(
   };
 
   const url = getRecoveryURL(image, false);
-  const res = await fetch(url, { method: "HEAD" });
+  const res = await fetch(url, { method: "HEAD", agent });
 
   if (res.status === 404) throw new Error("Not Found");
   else if (!res.ok) {
