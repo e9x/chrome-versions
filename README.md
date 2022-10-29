@@ -1,18 +1,11 @@
 # chrome-versions
 
-Database of Chrome OS builds and recovery images.
+Database of Chrome builds and Chrome OS recovery images hosted by Google.
 
-## Blogspot API key
+> Currently, only Chrome OS is being worked on.
 
-To create the perfect key (for scrapping blogspot):
+## Database
 
-1. Sign into Google
-2. Go to https://console.cloud.google.com/projectcreate
-3. Select "Create"
-4. Hover on "APIs and Services" and select "Credentials"
-5. "Create Credentials" -> "API key"
-6. Click on "Edit API key"
-7. Scroll down to "API restrictions"
-8. Select "Restrict key", select "Blogger API"
-9. Save.
-10. Go to the API key you just created (API key 1) and copy the "API key" field
+Complete databases can be found in the [NPM package](https://www.npmjs.com/package/chrome-versions). These databases are produced on high-end workstations (16 GB memory, low latency connection to [dl.google.com](https://dl.google.com/)), however you should be able to produce them on your own machine.
+
+See the [wiki](https://github.com/e9x/chrome-versions/wiki) for information (quickstart, how this works).
