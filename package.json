@@ -17,7 +17,7 @@
   ],
   "exports": {
     ".": {
-      "node": "./lib/index.js",
+      "import": "./lib/index.js",
       "types": "./lib/index.d.ts"
     },
     "./db": {
