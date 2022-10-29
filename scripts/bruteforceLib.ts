@@ -1,12 +1,11 @@
 import { chromeDBPath } from "../lib/db.js";
-import {
+import type {
   cros_build,
   cros_target,
   cros_recovery_image,
   cros_recovery_image_db,
-  parseChromeVersion,
 } from "../lib/index";
-import { getRecoveryURL } from "../lib/index.js";
+import { parseChromeVersion, getRecoveryURL } from "../lib/index.js";
 import Database from "better-sqlite3";
 import fetch from "node-fetch";
 import { Agent } from "node:http";
