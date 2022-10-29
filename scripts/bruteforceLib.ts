@@ -1,9 +1,10 @@
 import { chromeDBPath } from "../lib/db.js";
-import type {
+import {
   cros_build,
   cros_target,
   cros_recovery_image,
   cros_recovery_image_db,
+  parseChromeVersion,
 } from "../lib/index";
 import { getRecoveryURL } from "../lib/index.js";
 import Database from "better-sqlite3";
@@ -50,19 +51,13 @@ const bruteforce = async (board: string) => {
 
   if (!target) throw new Error(`Cannot find target ${board}`);
 
-  // Recovery images exist for M55+
-  function someM55(build: cros_build) {
-    const [major] = build.chrome.split(".");
-    return Number(major) >= 55;
-  }
-
   const stableBuilds = (
     db
       .prepare<[]>(
         "SELECT * FROM cros_build WHERE channel = 'stable-channel' ORDER BY platform ASC;"
       )
       .all() as cros_build[]
-  ).filter(someM55);
+  ).filter((build) => parseChromeVersion(build.chrome)[0] >= 20);
 
   console.log(`Found ${stableBuilds.length} builds...`);
 
