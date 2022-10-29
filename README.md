@@ -1,6 +1,6 @@
 # chrome-versions
 
-<a href="https://www.npmjs.com/package/@e9x/chrome-versions"><img src="https://img.shields.io/npm/v/@e9x/chrome-versions.svg?maxAge=3600" alt="npm version" /></a>
+<a href="https://www.npmjs.com/package/chrome-versions"><img src="https://img.shields.io/npm/v/chrome-versions.svg?maxAge=3600" alt="npm version" /></a>
 
 Database of Chrome builds and Chrome OS recovery images hosted by Google.
 
