@@ -30,7 +30,8 @@
     "crawlBlog": "ts-node-esm scripts/crawlBlog.ts",
     "crawlDash": "ts-node-esm scripts/crawlDash.ts",
     "crawlTargets": "ts-node-esm scripts/crawlTargets.ts",
-    "bruteforce": "ts-node-esm scripts/bruteforce.ts"
+    "bruteforce": "ts-node-esm scripts/bruteforce.ts",
+    "bruteforceAll": "ts-node-esm scripts/bruteforceAll.ts"
   },
   "devDependencies": {
     "@ianvs/prettier-plugin-sort-imports": "^3.7.1",
