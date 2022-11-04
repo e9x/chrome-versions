@@ -45,7 +45,7 @@ const insertTarget = db.prepare<
     mp_key_max: cros_target["mp_key_max"]
   ]
 >(
-  "INSERT OR IGNORE INTO cros_target (board, mp_token, mp_key_max) VALUES (?, ?, ?);"
+  "INSERT OR REPLACE INTO cros_target (board, mp_token, mp_key_max) VALUES (?, ?, ?);"
 );
 
 const insertBrand = db.prepare<
