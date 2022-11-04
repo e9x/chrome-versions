@@ -30,6 +30,7 @@
     "init": "ts-node-esm scripts/initDatabase.ts",
     "crawlBlog": "ts-node-esm scripts/crawlBlog.ts",
     "crawlDash": "ts-node-esm scripts/crawlDash.ts",
+    "crawlFlex": "ts-node-esm scripts/crawlFlex.ts",
     "crawlTargets": "ts-node-esm scripts/crawlTargets.ts",
     "bruteforce": "ts-node-esm scripts/bruteforce.ts",
     "bruteforceAll": "ts-node-esm scripts/bruteforceAll.ts"
@@ -39,6 +40,7 @@
     "@types/better-sqlite3": "^7.6.2",
     "@typescript-eslint/eslint-plugin": "^5.41.0",
     "@typescript-eslint/parser": "^5.40.1",
+    "better-sqlite3": "^7.6.2",
     "eslint": "^8.26.0",
     "node-fetch": "^3.2.10",
     "prettier": "^2.7.1",
