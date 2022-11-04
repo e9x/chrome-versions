@@ -1,6 +1,10 @@
 import { chromeDBPath } from "../lib/db.js";
 import type { cros_build, cros_channel } from "../lib/index";
-import { isValidBuild } from "../lib/index.js";
+import {
+  isValidBuild,
+  parseChromeVersion,
+  parsePlatformVersion,
+} from "../lib/index.js";
 import type { BloggerPostList } from "./Blogger";
 import Database from "better-sqlite3";
 import fetch from "node-fetch";
@@ -17,11 +21,18 @@ if (!googleAPIKey) throw new Error("You must specify an API key for blogger.");
 const channelNameToId = (name: string) =>
   `${name.toLowerCase()}-channel` as cros_channel;
 
-const testBuild = (build: cros_build): cros_build => {
+const testBuild = (build: unknown): build is cros_build => {
   if (!isValidBuild(build))
     throw new Error(`Invalid build: ${JSON.stringify(build)}`);
 
-  return build;
+  try {
+    parseChromeVersion(build.chrome);
+    parsePlatformVersion(build.platform);
+    return true;
+  } catch (err) {
+    // non-fatal error
+    return false;
+  }
 };
 
 async function* getBlogspot(blogId: string) {
@@ -79,11 +90,13 @@ async function* getBlogspot(blogId: string) {
             if (res) {
               const [, chrome, platform] = res;
 
-              yield testBuild({
+              const build = {
                 channel: "stable-channel",
                 platform,
                 chrome,
-              });
+              };
+
+              if (testBuild(build)) yield build;
 
               continue;
             }
@@ -105,11 +118,13 @@ async function* getBlogspot(blogId: string) {
             if (res) {
               /*const [, channel, chrome] = res;
 
-              yield testBuild({
+              const build = {
                 channel: channelNameToId(channel),
                 platform,
                 chrome,
-              });*/
+              };
+
+              if (testBuild(build)) yield build;*/
 
               continue;
             }
@@ -123,11 +138,13 @@ async function* getBlogspot(blogId: string) {
             if (res) {
               const [, channel, chrome, platform] = res;
 
-              yield testBuild({
+              const build = {
                 channel: channelNameToId(channel),
                 platform,
                 chrome,
-              });
+              };
+
+              if (testBuild(build)) yield build;
 
               continue;
             }
@@ -141,11 +158,13 @@ async function* getBlogspot(blogId: string) {
             if (res) {
               const [, channel, platform, chrome] = res;
 
-              yield testBuild({
+              const build = {
                 channel: channelNameToId(channel),
                 platform,
                 chrome,
-              });
+              };
+
+              if (testBuild(build)) yield build;
 
               continue;
             }
@@ -159,11 +178,13 @@ async function* getBlogspot(blogId: string) {
             if (res) {
               const [, chrome, platform, channel] = res;
 
-              yield testBuild({
+              const build = {
                 channel: channelNameToId(channel),
                 platform,
                 chrome,
-              });
+              };
+
+              if (testBuild(build)) yield build;
 
               continue;
             }
@@ -177,11 +198,13 @@ async function* getBlogspot(blogId: string) {
             if (res) {
               const [, channel, chrome, platform] = res;
 
-              yield testBuild({
+              const build = {
                 channel: channelNameToId(channel),
                 platform,
                 chrome,
-              });
+              };
+
+              if (testBuild(build)) yield build;
 
               continue;
             }
@@ -205,12 +228,15 @@ async function* getBlogspot(blogId: string) {
                 }
               );
 
-              for (const platform of platforms)
-                yield testBuild({
+              for (const platform of platforms) {
+                const build = {
                   channel: channelNameToId(channel),
                   platform,
                   chrome,
-                });
+                };
+
+                if (testBuild(build)) yield build;
+              }
 
               continue;
             }
@@ -231,12 +257,15 @@ async function* getBlogspot(blogId: string) {
                 return "";
               });
 
-              for (const platform of platforms)
-                yield testBuild({
+              for (const platform of platforms) {
+                const build = {
                   channel: channelNameToId(channel),
                   platform,
                   chrome,
-                });
+                };
+
+                if (testBuild(build)) yield build;
+              }
 
               continue;
             }
@@ -257,12 +286,15 @@ async function* getBlogspot(blogId: string) {
                 return "";
               });
 
-              for (const platform of platforms)
-                yield testBuild({
+              for (const platform of platforms) {
+                const build = {
                   channel: channelNameToId(channel),
                   platform,
                   chrome,
-                });
+                };
+
+                if (testBuild(build)) yield build;
+              }
 
               continue;
             }
@@ -277,11 +309,13 @@ async function* getBlogspot(blogId: string) {
             if (res) {
               const [, channel, chrome, platform] = res;
 
-              yield testBuild({
+              const build = {
                 channel: channelNameToId(channel),
                 platform,
                 chrome,
-              });
+              };
+
+              if (testBuild(build)) yield build;
 
               continue;
             }
@@ -304,12 +338,15 @@ async function* getBlogspot(blogId: string) {
                 return "";
               });
 
-              for (const platform of platforms)
-                yield testBuild({
+              for (const platform of platforms) {
+                const build = {
                   channel: channelNameToId(channel),
                   platform,
                   chrome,
-                });
+                };
+
+                if (testBuild(build)) yield build;
+              }
 
               continue;
             }
@@ -324,11 +361,13 @@ async function* getBlogspot(blogId: string) {
             if (res) {
               const [, channel, platform, chrome] = res;
 
-              yield testBuild({
+              const build = {
                 channel: channelNameToId(channel),
                 platform,
                 chrome,
-              });
+              };
+
+              if (testBuild(build)) yield build;
 
               continue;
             }
@@ -346,11 +385,14 @@ async function* getBlogspot(blogId: string) {
 
               // chrome is whole number
 
-              yield testBuild({
+              const build = {
                 channel: channelNameToId(channel),
                 platform,
                 chrome,
-              });
+              };
+
+              // should always fail test...
+              if (testBuild(build)) yield build;
 
               continue;
             }
@@ -365,11 +407,13 @@ async function* getBlogspot(blogId: string) {
             if (res) {
               const [, channel, platform, chrome] = res;
 
-              yield testBuild({
+              const build = {
                 channel: channelNameToId(channel),
                 platform,
                 chrome,
-              });
+              };
+
+              if (testBuild(build)) yield build;
 
               continue;
             }
@@ -402,12 +446,15 @@ async function* getBlogspot(blogId: string) {
               // [platformA,platformB] [chromeA,chromeB]
               const chrome = i > chromes.length - 1 ? chromes[0] : chromes[i];
 
-              for (const channel of channels)
-                yield testBuild({
+              for (const channel of channels) {
+                const build = {
                   channel,
                   chrome,
                   platform,
-                });
+                };
+
+                if (testBuild(build)) yield build;
+              }
             }
           }
           // const match = ();
