@@ -7,11 +7,13 @@ import type {
 } from "../lib/index";
 import { parseChromeVersion, getRecoveryURL } from "../lib/index.js";
 import Database from "better-sqlite3";
-import fetch from "node-fetch";
-import { Agent } from "node:http";
+import CacheableLookup from "cacheable-lookup";
+import type { Response } from "node-fetch";
+import fetch, { AbortError } from "node-fetch";
+import { Agent } from "node:https";
 import os from "node:os";
 
-process.env.UV_THREADPOOL_SIZE = os.cpus().toString();
+process.env.UV_THREADPOOL_SIZE = os.cpus().length.toString();
 
 const db = new Database(chromeDBPath);
 
@@ -47,11 +49,16 @@ function logData(data: SomeData) {
   console.log(`# BUILD - Chrome v${data[2].chrome}`);
   console.log(`# IMAGE - Patched ${data[0].toISOString()}`);
 }
+
+let initReq = 0;
+let realReq = 0;
+
 async function executeMP(
   target: cros_target,
   build: cros_build,
   mp_key: number,
-  agent: Agent
+  agent: Agent,
+  signal?: AbortSignal
 ): Promise<Executed> {
   const image: cros_recovery_image = {
     board: target.board,
@@ -62,10 +69,24 @@ async function executeMP(
     chrome: build.chrome,
   };
 
-  const url = getRecoveryURL(image, false);
-  const res = await fetch(url, { method: "HEAD", agent });
+  const url = getRecoveryURL(image, true);
+  let res: Response;
 
-  if (res.status === 404) throw new Error("Not Found");
+  initReq++;
+
+  while (true) {
+    try {
+      realReq++;
+      res = await fetch(url, { method: "HEAD", agent, signal });
+      break;
+    } catch (err) {
+      if (err instanceof AbortError) throw err;
+      console.error(err);
+      console.log("retrying");
+    }
+  }
+
+  if (res.status === 404) throw new Error(`${url} : Not Found`);
   else if (!res.ok) {
     console.error(res.status, res.statusText, image);
     throw new Error(`Unknown error: ${res.status}`);
@@ -91,60 +112,22 @@ interface Executed {
   image: cros_recovery_image;
   lastModified: Date;
 }
-function strategyExecute<T>(
-  times: number,
-  execute: (i: number) => Promise<T>,
-  me: number
-): AsyncGenerator<PromiseSettledResult<Awaited<T>>>;
 
-function strategyExecute<T, Data>(
-  times: Data[],
-  execute: (data: Data) => Promise<T>,
-  me: number
-): AsyncGenerator<PromiseSettledResult<Awaited<T>>>;
-
-async function* strategyExecute<T, Data>(
-  times: number | Data[],
-  execute: (i: number | Data) => Promise<T>,
-  me: number
-) {
-  const sets: (() => Promise<T>)[][] = [];
-
-  if (typeof times === "number")
-    for (let i = 0; i < times; i++) {
-      const executeI = Math.floor(i / me);
-
-      if (sets.length < executeI + 1) sets.push([]);
-
-      const set = sets[executeI];
-
-      set.push(() => execute(i));
-    }
-  else
-    for (let i = 0; i < times.length; i++) {
-      const executeI = Math.floor(i / me);
-
-      if (sets.length < executeI + 1) sets.push([]);
-
-      const set = sets[executeI];
-
-      set.push(() => execute(times[i]));
-    }
-
-  for (const set of sets)
-    for (const res of await Promise.allSettled(set.map((s) => s()))) yield res;
+function range(start: number, end: number) {
+  const range: number[] = [];
+  for (let i = start; i < end + 1; i++) range.push(i);
+  return range;
 }
 
 const bruteforce = async (board: string) => {
-  /**
-   * Maximum things to do at once.
-   */
-  const me = 5;
+  const cache = new CacheableLookup();
 
   const agent = new Agent({
-    maxSockets: me ** 2,
+    maxSockets: 1000,
     keepAlive: true,
   });
+
+  cache.install(agent);
 
   console.log("Builds may seem to be out of order, this is expected.");
 
@@ -167,48 +150,61 @@ const bruteforce = async (board: string) => {
 
   const recoveryImages: cros_recovery_image_db[] = [];
 
-  for (const build of stableBuilds) {
-    let gotData: Executed | undefined;
-
-    try {
-      gotData = await executeMP(target, build, lastMpKey, agent);
-    } catch (err) {
-      const keys: number[] = [];
-
-      for (let i = 1; i < target.mp_key_max + 1; i++) keys.push(i);
-
-      keys.splice(keys.indexOf(lastMpKey), 1);
-
-      for await (const data of strategyExecute(
-        keys,
-        (mp_key) => {
-          return executeMP(target, build, mp_key, agent);
-        },
-        me
-      )) {
-        if (data.status === "rejected") continue;
-        gotData = data.value;
-        break;
-      }
-    }
-
-    if (!gotData) continue;
-    // console.error("Couldn't find", build.chrome, build.platform);
-
-    // success
-
-    lastMpKey = gotData.image.mp_key;
+  const onData = (build: cros_build, data: Executed) => {
+    lastMpKey = data.image.mp_key;
 
     recoveryImages.push({
-      ...gotData.image,
-      last_modified: gotData.lastModified.toISOString(),
+      ...data.image,
+      last_modified: data.lastModified.toISOString(),
     });
 
-    logData([gotData.lastModified, gotData.image, build]);
-  }
+    logData([data.lastModified, data.image, build]);
+  };
+
+  const p: Promise<void>[] = [];
+
+  for (const build of stableBuilds)
+    p.push(
+      executeMP(target, build, lastMpKey, agent)
+        .then((data) => onData(build, data))
+        .catch(async () => {
+          const p: Promise<void>[] = [];
+
+          const keys: number[] = range(1, target.mp_key_max);
+          keys.splice(keys.indexOf(lastMpKey), 1);
+
+          const abort = new AbortController();
+
+          for (const mp_key of keys)
+            p.push(
+              executeMP(target, build, mp_key, agent)
+                .then((data) => {
+                  abort.abort();
+
+                  onData(build, data);
+                })
+                .catch(() => {
+                  /*console.error(
+                    "Couldn't find",
+                    target,
+                    build.chrome,
+                    build.platform,
+                    err.message
+                  );*/
+                })
+            );
+
+          await Promise.all(p);
+        })
+    );
+
+  await Promise.all(p);
+
   console.log("Fetched images. Inserting...");
 
   insertMany(recoveryImages);
+
+  console.log("Requests:", { initReq, realReq });
 };
 
 export default bruteforce;

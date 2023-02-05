@@ -17,7 +17,7 @@ for (const target of targets) {
     "count(*)": number;
   };
 
-  if (imageCount !== 0) {
+  /*if (imageCount !== 0) {
     console.log(
       target.board,
       "already has",
@@ -25,7 +25,7 @@ for (const target of targets) {
       "images scraped, skipping..."
     );
     continue;
-  }
+  }*/
 
   console.log("Bruteforcing", target.board);
   await bruteforce(target.board);

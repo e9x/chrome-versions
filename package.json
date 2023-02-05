@@ -41,6 +41,7 @@
     "@typescript-eslint/eslint-plugin": "^5.41.0",
     "@typescript-eslint/parser": "^5.40.1",
     "better-sqlite3": "^7.6.2",
+    "cacheable-lookup": "^7.0.0",
     "eslint": "^8.26.0",
     "node-fetch": "^3.2.10",
     "prettier": "^2.7.1",
