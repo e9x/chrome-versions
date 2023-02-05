@@ -138,9 +138,13 @@ async function* getBlogspot(blogId: string) {
             if (res) {
               const [, channel, chrome, platform] = res;
 
+              // add .0 to end
+              const newPlatform =
+                platform.split(".").length === 2 ? platform + ".0" : platform;
+
               const build = {
                 channel: channelNameToId(channel),
-                platform,
+                platform: newPlatform,
                 chrome,
               };
 
@@ -156,7 +160,7 @@ async function* getBlogspot(blogId: string) {
             );
 
             if (res) {
-              const [, channel, platform, chrome] = res;
+              /*const [, channel, platform, chrome] = res;
 
               const build = {
                 channel: channelNameToId(channel),
@@ -164,7 +168,7 @@ async function* getBlogspot(blogId: string) {
                 chrome,
               };
 
-              if (testBuild(build)) yield build;
+              if (testBuild(build)) yield build;*/
 
               continue;
             }
@@ -178,9 +182,13 @@ async function* getBlogspot(blogId: string) {
             if (res) {
               const [, chrome, platform, channel] = res;
 
+              // add .0 to end
+              const newPlatform =
+                platform.split(".").length === 2 ? platform + ".0" : platform;
+
               const build = {
                 channel: channelNameToId(channel),
-                platform,
+                platform: newPlatform,
                 chrome,
               };
 
@@ -198,9 +206,13 @@ async function* getBlogspot(blogId: string) {
             if (res) {
               const [, channel, chrome, platform] = res;
 
+              // add .0 to end
+              const newPlatform =
+                platform.split(".").length === 2 ? platform + ".0" : platform;
+
               const build = {
                 channel: channelNameToId(channel),
-                platform,
+                platform: newPlatform,
                 chrome,
               };
 
@@ -245,17 +257,20 @@ async function* getBlogspot(blogId: string) {
           // legacy (newer)
           {
             const res = content.match(
-              /the (stable|beta|dev) channel has been updated to ([\d.]+) for the devices listed below:/i
+              /the (stable|beta|dev) channel has been updated to ([\d.]+) for the devices listed below:(.*?)/i
             );
 
             if (res) {
-              const [, channel, chrome] = res;
+              const [, channel, chrome, anyPlatforms] = res;
               const platforms: string[] = [];
 
-              content.replace(/([\d.]+) for/gi, (match, platform: string) => {
-                platforms.push(platform);
-                return "";
-              });
+              anyPlatforms.replace(
+                /([\d.]+) for/gi,
+                (match, platform: string) => {
+                  platforms.push(platform);
+                  return "";
+                }
+              );
 
               for (const platform of platforms) {
                 const build = {
@@ -278,13 +293,17 @@ async function* getBlogspot(blogId: string) {
             );
 
             if (res) {
-              const [, channel, chrome, anyPlatform] = res;
+              const [, channel, chrome, anyPlatforms] = res;
               const platforms: string[] = [];
 
-              anyPlatform.replace(/([\d.]+)/g, (match, platform: string) => {
-                platforms.push(platform);
-                return "";
-              });
+              // do not match pepper flash version
+              anyPlatforms.replace(
+                /([\d.]+\.[\d.]+\.[\d.]+)(?!\.)/g,
+                (match, platform: string) => {
+                  platforms.push(platform);
+                  return "";
+                }
+              );
 
               for (const platform of platforms) {
                 const build = {
@@ -338,7 +357,10 @@ async function* getBlogspot(blogId: string) {
                 return "";
               });
 
-              for (const platform of platforms) {
+              for (let platform of platforms) {
+                // add .0 to end
+                if (platform.split(".").length === 2) platform += ".0";
+
                 const build = {
                   channel: channelNameToId(channel),
                   platform,
@@ -359,8 +381,9 @@ async function* getBlogspot(blogId: string) {
             );
 
             if (res) {
-              const [, channel, platform, chrome] = res;
+              /*const [, channel, platform, chrome] = res;
 
+              // this regex may not even match
               const build = {
                 channel: channelNameToId(channel),
                 platform,
@@ -368,6 +391,7 @@ async function* getBlogspot(blogId: string) {
               };
 
               if (testBuild(build)) yield build;
+              */
 
               continue;
             }
@@ -381,7 +405,7 @@ async function* getBlogspot(blogId: string) {
             );
 
             if (res) {
-              const [, channel, chrome, platform] = res;
+              /*const [, channel, chrome, platform] = res;
 
               // chrome is whole number
 
@@ -392,7 +416,7 @@ async function* getBlogspot(blogId: string) {
               };
 
               // should always fail test...
-              if (testBuild(build)) yield build;
+              if (testBuild(build)) yield build;*/
 
               continue;
             }
@@ -405,7 +429,7 @@ async function* getBlogspot(blogId: string) {
             );
 
             if (res) {
-              const [, channel, platform, chrome] = res;
+              /*const [, channel, platform, chrome] = res;
 
               const build = {
                 channel: channelNameToId(channel),
@@ -413,7 +437,7 @@ async function* getBlogspot(blogId: string) {
                 chrome,
               };
 
-              if (testBuild(build)) yield build;
+              if (testBuild(build)) yield build;*/
 
               continue;
             }
@@ -435,26 +459,36 @@ async function* getBlogspot(blogId: string) {
               .slice(4)
               .split(/ and /)
               .map(channelNameToId);
-            const platforms = anyPlatforms.split(/\s*[/,]\s*/g);
-            const chromes = anyChromes.split(/\s*[/,]\s*/g);
+            const platforms = anyPlatforms
+              .split(/\s*[/,]\s*/g)
+              .map((v) => v.trim());
+            const chromes = anyChromes
+              .split(/\s*[/,]\s*/g)
+              .map((v) => v.trim());
 
             for (let i = 0; i < platforms.length; i++) {
               let platform = platforms[i];
               // minor patch version /
-              if (platform.length === 1)
-                platform = platforms[i - 1].slice(0, -1) + platform;
+              if (platform.split(".").length === 1)
+                platform = platforms[0].slice(0, -1) + platform;
               // [platformA,platformB] [chromeA,chromeB]
-              const chrome = i > chromes.length - 1 ? chromes[0] : chromes[i];
+              let chrome = i > chromes.length - 1 ? chromes[0] : chromes[i];
+              // add .0 to end
+              if (chrome.split(".").length === 3) chrome += ".0";
 
-              for (const channel of channels) {
-                const build = {
-                  channel,
-                  chrome,
-                  platform,
-                };
+              // add .0 to end
+              if (platform.split(".").length === 2) platform += ".0";
 
-                if (testBuild(build)) yield build;
-              }
+              if (platform.split(".").length === 3)
+                for (const channel of channels) {
+                  const build = {
+                    channel,
+                    chrome,
+                    platform,
+                  };
+
+                  if (testBuild(build)) yield build;
+                }
             }
           }
           // const match = ();
