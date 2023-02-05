@@ -109,7 +109,8 @@ const insertTarget = db.prepare<
   "INSERT OR IGNORE INTO cros_target (board, mp_token, mp_key_max) VALUES (?, ?, ?);"
 );
 
-console.log("Found", targets.length, "brands");
+console.log("Found", targets.length, "targets");
+console.log("Found", brands.length, "brands");
 
 db.transaction(() => {
   for (const target of targets)
