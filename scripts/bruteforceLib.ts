@@ -39,6 +39,11 @@ const insertMany = db.transaction((images: cros_recovery_image_db[]) => {
     );
 });
 
+/**
+ * Maximum things to do at once.
+ */
+const me = 13;
+
 const bruteforce = async (board: string) => {
   console.log("Builds may seem to be out of order, this is expected.");
 
@@ -78,7 +83,7 @@ const bruteforce = async (board: string) => {
 
     if (typeof times === "number")
       for (let i = 0; i < times; i++) {
-        const executeI = Math.floor(i / 10);
+        const executeI = Math.floor(i / me);
 
         if (sets.length < executeI + 1) sets.push([]);
 
@@ -88,7 +93,7 @@ const bruteforce = async (board: string) => {
       }
     else
       for (let i = 0; i < times.length; i++) {
-        const executeI = Math.floor(i / 10);
+        const executeI = Math.floor(i / me);
 
         if (sets.length < executeI + 1) sets.push([]);
 
@@ -108,7 +113,7 @@ const bruteforce = async (board: string) => {
   }
 
   const agent = new Agent({
-    maxSockets: 10,
+    maxSockets: me ** 2,
     keepAlive: true,
   });
 
