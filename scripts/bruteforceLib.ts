@@ -9,6 +9,9 @@ import { parseChromeVersion, getRecoveryURL } from "../lib/index.js";
 import Database from "better-sqlite3";
 import fetch from "node-fetch";
 import { Agent } from "node:http";
+import os from "node:os";
+
+process.env.UV_THREADPOOL_SIZE = os.cpus().toString();
 
 const db = new Database(chromeDBPath);
 
@@ -39,17 +42,111 @@ const insertMany = db.transaction((images: cros_recovery_image_db[]) => {
     );
 });
 
-/**
- * Maximum things to do at once.
- */
-const me = 13;
+function logData(data: SomeData) {
+  console.log(getRecoveryURL(data[1]));
+  console.log(`# BUILD - Chrome v${data[2].chrome}`);
+  console.log(`# IMAGE - Patched ${data[0].toISOString()}`);
+}
+async function executeMP(
+  target: cros_target,
+  build: cros_build,
+  mp_key: number,
+  agent: Agent
+): Promise<Executed> {
+  const image: cros_recovery_image = {
+    board: target.board,
+    platform: build.platform,
+    mp_key,
+    mp_token: target.mp_token,
+    channel: build.channel,
+    chrome: build.chrome,
+  };
+
+  const url = getRecoveryURL(image, false);
+  const res = await fetch(url, { method: "HEAD", agent });
+
+  if (res.status === 404) throw new Error("Not Found");
+  else if (!res.ok) {
+    console.error(res.status, res.statusText, image);
+    throw new Error(`Unknown error: ${res.status}`);
+  }
+
+  return {
+    image,
+    lastModified: new Date(res.headers.get("last-modified") || ""),
+  };
+}
+
+type SomeData = [
+  lastModified: Date,
+  image: cros_recovery_image,
+  build: cros_build
+];
+
+const getTarget = db.prepare(
+  "SELECT * FROM cros_target WHERE board = ? LIMIT 1;"
+);
+
+interface Executed {
+  image: cros_recovery_image;
+  lastModified: Date;
+}
+function strategyExecute<T>(
+  times: number,
+  execute: (i: number) => Promise<T>,
+  me: number
+): AsyncGenerator<PromiseSettledResult<Awaited<T>>>;
+
+function strategyExecute<T, Data>(
+  times: Data[],
+  execute: (data: Data) => Promise<T>,
+  me: number
+): AsyncGenerator<PromiseSettledResult<Awaited<T>>>;
+
+async function* strategyExecute<T, Data>(
+  times: number | Data[],
+  execute: (i: number | Data) => Promise<T>,
+  me: number
+) {
+  const sets: (() => Promise<T>)[][] = [];
+
+  if (typeof times === "number")
+    for (let i = 0; i < times; i++) {
+      const executeI = Math.floor(i / me);
+
+      if (sets.length < executeI + 1) sets.push([]);
+
+      const set = sets[executeI];
+
+      set.push(() => execute(i));
+    }
+  else
+    for (let i = 0; i < times.length; i++) {
+      const executeI = Math.floor(i / me);
+
+      if (sets.length < executeI + 1) sets.push([]);
+
+      const set = sets[executeI];
+
+      set.push(() => execute(times[i]));
+    }
+
+  for (const set of sets)
+    for (const res of await Promise.allSettled(set.map((s) => s()))) yield res;
+}
 
 const bruteforce = async (board: string) => {
-  console.log("Builds may seem to be out of order, this is expected.");
+  /**
+   * Maximum things to do at once.
+   */
+  const me = 5;
 
-  const getTarget = db.prepare(
-    "SELECT * FROM cros_target WHERE board = ? LIMIT 1;"
-  );
+  const agent = new Agent({
+    maxSockets: me ** 2,
+    keepAlive: true,
+  });
+
+  console.log("Builds may seem to be out of order, this is expected.");
 
   const target = getTarget.get(board);
 
@@ -65,95 +162,8 @@ const bruteforce = async (board: string) => {
 
   console.log(`Found ${stableBuilds.length} builds...`);
 
-  function strategyExecute<T>(
-    times: number,
-    execute: (i: number) => Promise<T>
-  ): AsyncGenerator<PromiseSettledResult<Awaited<T>>>;
-
-  function strategyExecute<T, Data>(
-    times: Data[],
-    execute: (data: Data) => Promise<T>
-  ): AsyncGenerator<PromiseSettledResult<Awaited<T>>>;
-
-  async function* strategyExecute<T, Data>(
-    times: number | Data[],
-    execute: (i: number | Data) => Promise<T>
-  ) {
-    const sets: (() => Promise<T>)[][] = [];
-
-    if (typeof times === "number")
-      for (let i = 0; i < times; i++) {
-        const executeI = Math.floor(i / me);
-
-        if (sets.length < executeI + 1) sets.push([]);
-
-        const set = sets[executeI];
-
-        set.push(() => execute(i));
-      }
-    else
-      for (let i = 0; i < times.length; i++) {
-        const executeI = Math.floor(i / me);
-
-        if (sets.length < executeI + 1) sets.push([]);
-
-        const set = sets[executeI];
-
-        set.push(() => execute(times[i]));
-      }
-
-    for (const set of sets)
-      for (const res of await Promise.allSettled(set.map((s) => s())))
-        yield res;
-  }
-
-  interface Executed {
-    image: cros_recovery_image;
-    lastModified: Date;
-  }
-
-  const agent = new Agent({
-    maxSockets: me ** 2,
-    keepAlive: true,
-  });
-
-  async function executeMP(
-    target: cros_target,
-    build: cros_build,
-    mp_key: number
-  ): Promise<Executed> {
-    const image: cros_recovery_image = {
-      board: target.board,
-      platform: build.platform,
-      mp_key,
-      mp_token: target.mp_token,
-      channel: build.channel,
-      chrome: build.chrome,
-    };
-
-    const url = getRecoveryURL(image, false);
-    const res = await fetch(url, { method: "HEAD", agent });
-
-    if (res.status === 404) throw new Error("Not Found");
-    else if (!res.ok) {
-      console.error(res.status, res.statusText, image);
-      throw new Error(`Unknown error: ${res.status}`);
-    }
-
-    return {
-      image,
-      lastModified: new Date(res.headers.get("last-modified") || ""),
-    };
-  }
-
   // highest (4) -> lowest (1)
   let lastMpKey = target.mp_key_max;
-
-  type SomeData = [
-    lastModified: Date,
-    image: cros_recovery_image,
-    build: cros_build
-  ];
 
   const recoveryImages: cros_recovery_image_db[] = [];
 
@@ -161,17 +171,21 @@ const bruteforce = async (board: string) => {
     let gotData: Executed | undefined;
 
     try {
-      gotData = await executeMP(target, build, lastMpKey);
+      gotData = await executeMP(target, build, lastMpKey, agent);
     } catch (err) {
       const keys: number[] = [];
 
-      for (let i = 0; i < target.mp_key_max; i++) keys.push(i + 1);
+      for (let i = 1; i < target.mp_key_max + 1; i++) keys.push(i);
 
       keys.splice(keys.indexOf(lastMpKey), 1);
 
-      for await (const data of strategyExecute(keys, (mp_key) => {
-        return executeMP(target, build, mp_key);
-      })) {
+      for await (const data of strategyExecute(
+        keys,
+        (mp_key) => {
+          return executeMP(target, build, mp_key, agent);
+        },
+        me
+      )) {
         if (data.status === "rejected") continue;
         gotData = data.value;
         break;
@@ -192,13 +206,6 @@ const bruteforce = async (board: string) => {
 
     logData([gotData.lastModified, gotData.image, build]);
   }
-
-  function logData(data: SomeData) {
-    console.log(getRecoveryURL(data[1]));
-    console.log(`# BUILD - Chrome v${data[2].chrome}`);
-    console.log(`# IMAGE - Patched ${data[0].toISOString()}`);
-  }
-
   console.log("Fetched images. Inserting...");
 
   insertMany(recoveryImages);
