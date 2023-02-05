@@ -3,7 +3,7 @@
  */
 
 import { chromeDBPath } from "../lib/db.js";
-import type { cros_brand, cros_target} from "../lib/index.js";
+import type { cros_brand, cros_target } from "../lib/index.js";
 import { parseRecoveryURL } from "../lib/index.js";
 import Database from "better-sqlite3";
 import fetch from "node-fetch";
@@ -109,7 +109,7 @@ const insertTarget = db.prepare<
   "INSERT OR IGNORE INTO cros_target (board, mp_token, mp_key_max) VALUES (?, ?, ?);"
 );
 
-console.log("Found", targets.length, "targets");
+console.log("Found", targets.length, "brands");
 
 db.transaction(() => {
   for (const target of targets)
@@ -119,8 +119,6 @@ db.transaction(() => {
 const insertBrand = db.prepare<
   [board: cros_brand["board"], brand: cros_brand["brand"]]
 >("INSERT OR IGNORE INTO cros_brand (board, brand) VALUES (?, ?);");
-
-console.log("Found", brands.length, "targets");
 
 db.transaction(() => {
   for (const brand of brands) insertBrand.run(brand.board, brand.brand);

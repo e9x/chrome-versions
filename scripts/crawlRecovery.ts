@@ -52,6 +52,8 @@ const insertBrand = db.prepare<
   [board: cros_brand["board"], brand: cros_brand["brand"]]
 >("INSERT OR IGNORE INTO cros_brand (board, brand) VALUES (?, ?);");
 
+console.log("Found", recoveryTargets.length, "targets");
+
 for (const target of recoveryTargets) {
   const parsedImg = parseRecoveryURL(target.url);
 

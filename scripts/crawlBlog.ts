@@ -519,6 +519,8 @@ for await (const build of getBlogspot("8982037438137564684")) {
   builds.push(build);
 }
 
+console.log("Found", builds.length, "builds");
+
 const insertMany = db.transaction((builds: cros_build[]) => {
   for (const build of builds)
     insert.run(build.platform, build.chrome, build.channel);
