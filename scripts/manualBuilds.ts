@@ -1,8 +1,5 @@
-import { chromeDBPath } from "../lib/db.js";
 import type { cros_build } from "../lib/index.js";
-import Database from "better-sqlite3";
-
-const db = new Database(chromeDBPath);
+import { insertManyBuilds } from "./dbOp.js";
 
 const builds: cros_build[] = [
   {
@@ -13,21 +10,6 @@ const builds: cros_build[] = [
   },
 ];
 
-const insert = db.prepare<
-  [
-    platform: cros_build["platform"],
-    chrome: cros_build["chrome"],
-    channel: cros_build["channel"]
-  ]
->(
-  "INSERT OR IGNORE INTO cros_build (platform, chrome, channel) VALUES (?, ?, ?);"
-);
-
 console.log("Found", builds.length, "builds");
 
-const insertMany = db.transaction((builds: cros_build[]) => {
-  for (const build of builds)
-    insert.run(build.platform, build.chrome, build.channel);
-});
-
-insertMany(builds);
+insertManyBuilds(builds);

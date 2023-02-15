@@ -6,6 +6,7 @@ import type {
   cros_recovery_image_db,
 } from "../lib/index";
 import { parseChromeVersion, getRecoveryURL } from "../lib/index.js";
+import { insertManyRecoveryImage } from "./dbOp.js";
 import Database from "better-sqlite3";
 import CacheableLookup from "cacheable-lookup";
 import type { Response } from "node-fetch";
@@ -16,33 +17,6 @@ import os from "node:os";
 process.env.UV_THREADPOOL_SIZE = os.cpus().length.toString();
 
 const db = new Database(chromeDBPath);
-
-const insert = db.prepare<
-  [
-    board: cros_recovery_image_db["board"],
-    platform: cros_recovery_image_db["platform"],
-    chrome: cros_recovery_image_db["chrome"],
-    mp_token: cros_recovery_image_db["mp_token"],
-    mp_key: cros_recovery_image_db["mp_key"],
-    channel: cros_recovery_image_db["channel"],
-    last_modified: cros_recovery_image_db["last_modified"]
-  ]
->(
-  "INSERT OR IGNORE INTO cros_recovery_image (board, platform, chrome, mp_token, mp_key, channel, last_modified) VALUES (?, ?, ?, ?, ?, ?, ?);"
-);
-
-const insertMany = db.transaction((images: cros_recovery_image_db[]) => {
-  for (const image of images)
-    insert.run(
-      image.board,
-      image.platform,
-      image.chrome,
-      image.mp_token,
-      image.mp_key,
-      image.channel,
-      image.last_modified
-    );
-});
 
 function logData(data: SomeData) {
   console.log(getRecoveryURL(data[1]));
@@ -203,7 +177,7 @@ const bruteforce = async (board: string) => {
   console.log("Found", recoveryImages.length, "images");
   console.log("Fetched images. Inserting...");
 
-  insertMany(recoveryImages);
+  insertManyRecoveryImage(recoveryImages);
 
   console.log("Requests:", { initReq, realReq });
 };

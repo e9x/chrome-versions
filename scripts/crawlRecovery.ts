@@ -1,7 +1,6 @@
-import { chromeDBPath } from "../lib/db.js";
 import type { cros_brand, cros_target } from "../lib/index";
 import { parseRecoveryURL } from "../lib/index.js";
-import Database from "better-sqlite3";
+import { insertManyBrands, insertManyTargets } from "./dbOp.js";
 import fetch from "node-fetch";
 
 interface RecoveryTarget {
@@ -24,8 +23,6 @@ interface RecoveryTarget {
   hwids: string[];
 }
 
-const db = new Database(chromeDBPath);
-
 const recoveryTargets: RecoveryTarget[] = [];
 
 for (const jsonURL of [
@@ -38,26 +35,23 @@ for (const jsonURL of [
   recoveryTargets.push(...((await res.json()) as RecoveryTarget[]));
 }
 
-const insertTarget = db.prepare<
-  [
-    board: cros_target["board"],
-    mp_token: cros_target["mp_token"],
-    mp_key_max: cros_target["mp_key_max"]
-  ]
->(
-  "INSERT OR REPLACE INTO cros_target (board, mp_token, mp_key_max) VALUES (?, ?, ?);"
-);
-
-const insertBrand = db.prepare<
-  [board: cros_brand["board"], brand: cros_brand["brand"]]
->("INSERT OR IGNORE INTO cros_brand (board, brand) VALUES (?, ?);");
-
-console.log("Found", recoveryTargets.length, "targets");
+const targets: cros_target[] = [];
+const brands: cros_brand[] = [];
 
 for (const target of recoveryTargets) {
   const parsedImg = parseRecoveryURL(target.url);
 
   // assume mp_token is the max bc the json is the latest
-  insertTarget.run(parsedImg.board, parsedImg.mp_token, parsedImg.mp_key);
-  insertBrand.run(parsedImg.board, target.model);
+  targets.push({
+    board: parsedImg.board,
+    mp_token: parsedImg.mp_token,
+    mp_key_max: parsedImg.mp_key,
+  });
+  brands.push({ board: parsedImg.board, brand: target.model });
 }
+
+console.log("Found", targets.length, "targets");
+console.log("Found", brands.length, "brands");
+
+insertManyTargets(targets);
+insertManyBrands(brands);

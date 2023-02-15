@@ -1,4 +1,3 @@
-import { chromeDBPath } from "../lib/db.js";
 import type { cros_build, cros_channel } from "../lib/index";
 import {
   isValidBuild,
@@ -6,11 +5,9 @@ import {
   parsePlatformVersion,
 } from "../lib/index.js";
 import type { BloggerPostList } from "./Blogger";
-import Database from "better-sqlite3";
+import { insertManyBuilds } from "./dbOp.js";
 import fetch from "node-fetch";
 import { stripHtml } from "string-strip-html";
-
-const db = new Database(chromeDBPath);
 
 // try it: https://developers.google.com/blogger/docs/3.0/reference/posts/list?apix_params=%7B%22blogId%22%3A%228982037438137564684%22%7D
 
@@ -503,16 +500,6 @@ async function* getBlogspot(blogId: string) {
 // from https://chromereleases.googleblog.com/
 // {"blogId": "..."}
 
-const insert = db.prepare<
-  [
-    platform: cros_build["platform"],
-    chrome: cros_build["chrome"],
-    channel: cros_build["channel"]
-  ]
->(
-  "INSERT OR IGNORE INTO cros_build (platform, chrome, channel) VALUES (?, ?, ?);"
-);
-
 const builds: cros_build[] = [];
 
 for await (const build of getBlogspot("8982037438137564684")) {
@@ -521,9 +508,4 @@ for await (const build of getBlogspot("8982037438137564684")) {
 
 console.log("Found", builds.length, "builds");
 
-const insertMany = db.transaction((builds: cros_build[]) => {
-  for (const build of builds)
-    insert.run(build.platform, build.chrome, build.channel);
-});
-
-insertMany(builds);
+insertManyBuilds(builds);

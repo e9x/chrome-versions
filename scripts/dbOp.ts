@@ -1,5 +1,10 @@
 import { chromeDBPath } from "../lib/db.js";
-import type { cros_brand, cros_build, cros_target } from "../lib/index.js";
+import type {
+  cros_brand,
+  cros_build,
+  cros_recovery_image_db,
+  cros_target,
+} from "../lib/index.js";
 import Database from "better-sqlite3";
 
 const db = new Database(chromeDBPath);
@@ -41,3 +46,32 @@ export const insertBrand = db.prepare<
 export const insertManyBrands = db.transaction((brands: cros_brand[]) => {
   for (const brand of brands) insertBrand.run(brand.board, brand.brand);
 });
+
+export const insertRecoveryImage = db.prepare<
+  [
+    board: cros_recovery_image_db["board"],
+    platform: cros_recovery_image_db["platform"],
+    chrome: cros_recovery_image_db["chrome"],
+    mp_token: cros_recovery_image_db["mp_token"],
+    mp_key: cros_recovery_image_db["mp_key"],
+    channel: cros_recovery_image_db["channel"],
+    last_modified: cros_recovery_image_db["last_modified"]
+  ]
+>(
+  "INSERT OR IGNORE INTO cros_recovery_image (board, platform, chrome, mp_token, mp_key, channel, last_modified) VALUES (?, ?, ?, ?, ?, ?, ?);"
+);
+
+export const insertManyRecoveryImage = db.transaction(
+  (images: cros_recovery_image_db[]) => {
+    for (const image of images)
+      insertRecoveryImage.run(
+        image.board,
+        image.platform,
+        image.chrome,
+        image.mp_token,
+        image.mp_key,
+        image.channel,
+        image.last_modified
+      );
+  }
+);
