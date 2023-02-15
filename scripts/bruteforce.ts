@@ -213,6 +213,8 @@ const getImages = db.prepare<[board: string]>(
   "SELECT count(*) FROM cros_recovery_image WHERE board = ?;"
 );
 
+const checkRedundancy = process.env.SKIP_CHECK_REDUNDANCY !== "true";
+
 const [, , board] = process.argv;
 
 if (board) {
@@ -223,18 +225,20 @@ if (board) {
   const targets = getTargets.all() as cros_target[];
 
   for (const target of targets) {
-    const { "count(*)": imageCount } = getImages.get(target.board) as {
-      "count(*)": number;
-    };
+    if (checkRedundancy) {
+      const { "count(*)": imageCount } = getImages.get(target.board) as {
+        "count(*)": number;
+      };
 
-    if (imageCount !== 0) {
-      console.log(
-        target.board,
-        "already has",
-        imageCount,
-        "images scraped, skipping..."
-      );
-      continue;
+      if (imageCount !== 0) {
+        console.log(
+          target.board,
+          "already has",
+          imageCount,
+          "images scraped, skipping..."
+        );
+        continue;
+      }
     }
 
     console.log("Bruteforcing", target.board);
