@@ -1,92 +1,118 @@
 /**
  * Prefer running this script before the blog crawler!
+ * https://chromiumdash.appspot.com/serving-builds?deviceCategory=Chrome%20OS
+ * objective of scraping chromiumdash (or cros-recovery images, this is just a renewed version):
+ * collect "secret" or unannounced builds of Chrome OS
+ * post-AUE devices provide earlier builds that may have been unannounced
+ * for example, running crawlBlog will miss the non-scrubbed v92 platform version: 13982.88.0
  */
 
-import { chromeDBPath } from "../lib/db.js";
-import type { cros_build, cros_channel } from "../lib/index";
-import iterateCSVRows from "./parseCSV.js";
-import Database from "better-sqlite3";
+import { parseRecoveryURL } from "../lib/index.js";
+import type { cros_brand, cros_build, cros_target } from "../lib/index.js";
+import {
+  insertManyTargets,
+  insertManyBrands,
+  insertManyBuilds,
+} from "./dbOp.js";
 import fetch from "node-fetch";
 
-const db = new Database(chromeDBPath);
+const targets: cros_target[] = [];
+const builds: cros_build[] = [];
+const brands: cros_brand[] = [];
 
-// https://chromiumdash.appspot.com/serving-builds?deviceCategory=Chrome%20OS
-// objective of scraping chromiumdash (or cros-recovery images, this is just a renewed version):
-// collect "secret" or unannounced builds of Chrome OS
-// post-AUE devices provide earlier builds that may have been unannounced
-// for example, running crawlBlog will miss the non-scrubbed v92 platform version: 13982.88.0
-
-// CSV:
-// - https://chromiumdash.appspot.com/cros/download_serving_builds_csv?deviceCategory=Chrome%20OS
-
+// we use the fetch endpoint... Google has hidden the recovery urls!
 const res = await fetch(
-  "https://chromiumdash.appspot.com/cros/download_serving_builds_csv?deviceCategory=Chrome%20OS"
+  "https://chromiumdash.appspot.com/cros/fetch_serving_builds?deviceCategory=Chrome%20OS"
 );
 
-if (!res.ok || !res.body) throw new Error("Fetching CSV was not OK.");
+if (!res.ok) throw new Error("Fetching CSV was not OK.");
 
-/**
- * Platform key
- */
-const versions: Record<string, [id: string, chrome: string]> = {};
+interface FetchedBuild {
+  chromeVersion: string;
+  comparedToMostCommon: number;
+  version: string;
+}
 
-for await (const row of iterateCSVRows(res.body))
-  for (const column in row) {
-    if (column.startsWith("cr_")) {
-      const id = column.slice(3);
-      const platform = row[`cros_${id}`];
-      const chrome = row[column];
+interface FetchedModel {
+  [releasePinned: number]: FetchedBuild;
+  brandNames: string[];
+  isAue: boolean;
+  pushRecoveries: Record<string, string>;
+  servingBeta?: FetchedBuild;
+  servingCanary?: FetchedBuild;
+  servingDev?: FetchedBuild;
+  servingLtc?: FetchedBuild;
+  servingLtr?: FetchedBuild;
+  servingStable?: FetchedBuild;
+}
 
-      if (!platform) throw new Error(`${column} has no platform`);
+interface FetchedModels {
+  models: Record<string, FetchedModel>;
+}
 
-      if (platform === "no update") continue;
+interface FetchedData {
+  builds: Record<string, FetchedModel | FetchedModels>;
+  creationDate: string;
+  creationTime: string;
+  enterprisePins: number[];
+}
 
-      versions[platform] = [id, chrome];
+const json = (await res.json()) as FetchedData;
+
+const dataContainsModels = (
+  data: FetchedModel | FetchedModels
+): data is FetchedModels => "models" in data;
+
+const addBrands = (brandNames: string[], board: string) => {
+  for (const brand of brandNames) brands.push({ board, brand });
+};
+
+for (const board in json.builds) {
+  const boardData = json.builds[board];
+
+  let mp_key_max = 1; // start at 1
+  let mp_token = "mp";
+
+  const readPushRecovery = (image: string) => {
+    const parsed = parseRecoveryURL(image);
+
+    // collect the build
+    builds.push({
+      chrome: parsed.chrome,
+      channel: parsed.channel,
+      platform: parsed.platform,
+    });
+
+    // for the target
+    if (mp_key_max < parsed.mp_key) mp_key_max = parsed.mp_key;
+    mp_token = parsed.mp_token;
+  };
+
+  if (dataContainsModels(boardData))
+    for (const model in boardData.models) {
+      const modelData = boardData.models[model];
+      addBrands(modelData.brandNames, board);
+      for (const push in modelData.pushRecoveries)
+        readPushRecovery(modelData.pushRecoveries[push]);
+    }
+  else {
+    addBrands(boardData.brandNames, board);
+    for (const push in boardData.pushRecoveries) {
+      readPushRecovery(boardData.pushRecoveries[push]);
     }
   }
 
-const insert = db.prepare<
-  [
-    platform: cros_build["platform"],
-    chrome: cros_build["chrome"],
-    channel: cros_build["channel"]
-  ]
->(
-  "INSERT OR IGNORE INTO cros_build (platform, chrome, channel) VALUES (?, ?, ?);"
-);
-
-const builds: cros_build[] = [];
-
-platforms: for (const platform in versions) {
-  let channel: cros_channel;
-
-  switch (versions[platform][0]) {
-    case "dev":
-      channel = "dev-channel";
-      break;
-    case "beta":
-      channel = "beta-channel";
-      break;
-    case "canary":
-      // we overlook canary builds, they're out of scope
-      continue platforms;
-    default:
-      channel = "stable-channel";
-      break;
-  }
-
-  builds.push({
-    channel,
-    chrome: versions[platform][1],
-    platform,
+  targets.push({
+    board,
+    mp_token,
+    mp_key_max,
   });
 }
 
+console.log("Found", targets.length, "targets");
+console.log("Found", brands.length, "brands");
 console.log("Found", builds.length, "builds");
 
-const insertMany = db.transaction((builds: cros_build[]) => {
-  for (const build of builds)
-    insert.run(build.platform, build.chrome, build.channel);
-});
-
-insertMany(builds);
+insertManyTargets(targets);
+insertManyBrands(brands);
+insertManyBuilds(builds);
