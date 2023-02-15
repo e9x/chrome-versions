@@ -143,7 +143,7 @@ const bruteforce = async (board: string) => {
       .all() as cros_build[]
   ).filter((build) => parseChromeVersion(build.chrome)[0] >= 20);
 
-  console.log(`Found ${stableBuilds.length} builds...`);
+  console.log("Found", stableBuilds.length, "builds...");
 
   // highest (4) -> lowest (1)
   let lastMpKey = target.mp_key_max;
@@ -200,6 +200,7 @@ const bruteforce = async (board: string) => {
 
   await Promise.all(p);
 
+  console.log("Found", recoveryImages.length, "images");
   console.log("Fetched images. Inserting...");
 
   insertMany(recoveryImages);
