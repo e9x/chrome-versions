@@ -28,6 +28,8 @@ const recoveryTargets: RecoveryTarget[] = [];
 for (const jsonURL of [
   "https://dl.google.com/dl/edgedl/chromeos/recovery/recovery.json",
   "https://dl.google.com/dl/edgedl/chromeos/recovery/recovery2.json",
+  "https://dl.google.com/dl/edgedl/chromeos/recovery/onhub_recovery.json",
+  "https://dl.google.com/dl/edgedl/chromeos/recovery/workspaceHardware_recovery2.json",
   "https://dl.google.com/dl/edgedl/chromeos/recovery/cloudready_recovery.json",
 ]) {
   const res = await fetch(jsonURL);
@@ -47,6 +49,7 @@ for (const target of recoveryTargets) {
     mp_token: parsedImg.mp_token,
     mp_key_max: parsedImg.mp_key,
   });
+
   brands.push({ board: parsedImg.board, brand: target.model });
 }
 
