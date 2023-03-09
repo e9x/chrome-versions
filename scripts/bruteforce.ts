@@ -27,6 +27,10 @@ function logData(data: SomeData) {
 let initReq = 0;
 let realReq = 0;
 
+const testMP = db.prepare(
+  "SELECT COUNT(*) FROM cros_recovery_image WHERE board = ? AND platform = ? AND chrome = ? AND mp_token = ? AND mp_key = ? AND channel = ?;"
+);
+
 async function executeMP(
   target: cros_target,
   build: cros_build,
@@ -42,6 +46,18 @@ async function executeMP(
     channel: build.channel,
     chrome: build.chrome,
   };
+
+  // board, platform, chrome, mp_token, mp_key, channel
+  const { "COUNT(*)": count } = testMP.get(
+    image.board,
+    image.platform,
+    image.chrome,
+    image.mp_token,
+    image.mp_key,
+    image.channel
+  ) as { "COUNT(*)": number };
+
+  if (count) throw new Error("Already fetched");
 
   const url = getRecoveryURL(image, true);
   let res: Response;
