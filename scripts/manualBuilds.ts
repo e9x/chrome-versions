@@ -53,6 +53,41 @@ const builds: cros_build[] = [
     chrome: "87.0.4280.152",
     platform: "13505.111.0",
   },
+  {
+    channel: "stable-channel",
+    chrome: "104.0.5112.83",
+    platform: "14909.100.0",
+  },
+  {
+    channel: "stable-channel",
+    chrome: "101.0.4951.72",
+    platform: "14588.123.0",
+  },
+  {
+    channel: "stable-channel",
+    chrome: "99.0.4844.94",
+    platform: "14469.59.0",
+  },
+  {
+    channel: "stable-channel",
+    chrome: "97.0.4692.77",
+    platform: "14324.62.0",
+  },
+  {
+    channel: "stable-channel",
+    chrome: "93.0.4577.107",
+    platform: "14092.77.0",
+  },
+  {
+    channel: "stable-channel",
+    chrome: "88.0.4324.208",
+    platform: "13597.105.0",
+  },
+  {
+    channel: "stable-channel",
+    chrome: "75.0.3770.129",
+    platform: "12105.90.0",
+  },
 ];
 
 console.log("Found", builds.length, "builds");
