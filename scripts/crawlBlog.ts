@@ -127,6 +127,28 @@ async function* getBlogspot(blogId: string) {
             }
           }
 
+          // newer posts, v113, 112, etc
+          // format only used for dev and beta so far
+          {
+            const res = content.match(
+              /The (Dev|Beta) channel is being updated to (?:Chrome)?OS version: ([\d.]+)(?:,| and) Browser version: ([\d.]+)/
+            );
+
+            if (res) {
+              const [, channel, platform, chrome] = res;
+
+              const build = {
+                channel: channelNameToId(channel),
+                platform,
+                chrome,
+              };
+
+              if (testBuild(build)) yield build;
+
+              continue;
+            }
+          }
+
           {
             const res = content.match(
               /the google chrome team is happy to announce the release of chrome [\d.]+ on the (stable|beta|dev) channel.*?chrome version ([\d.]+) \(platform version: ([\d.]+)\)/i
