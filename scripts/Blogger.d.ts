@@ -41,7 +41,7 @@ export interface BloggerPostItem {
   images: [
     {
       url: string;
-    }
+    },
   ];
   customMetaData: string;
   author: {

@@ -14,11 +14,11 @@ process.env.UV_THREADPOOL_SIZE = os.cpus().length.toString();
 const db = new Database(chromeDBPath);
 
 const getTarget = db.prepare(
-  "SELECT * FROM cros_target WHERE board = ? LIMIT 1;"
+  "SELECT * FROM cros_target WHERE board = ? LIMIT 1;",
 );
 const getTargets = db.prepare("SELECT * FROM cros_target;");
 const getImages = db.prepare<[board: string]>(
-  "SELECT * FROM cros_recovery_image WHERE board = ?;"
+  "SELECT * FROM cros_recovery_image WHERE board = ?;",
 );
 
 const [, , board] = process.argv;
@@ -34,8 +34,8 @@ if (board) {
 
   await Promise.all(
     targets.map((target) =>
-      calculateSize(target.board).then((bs) => (size += bs))
-    )
+      calculateSize(target.board).then((bs) => (size += bs)),
+    ),
   );
 
   console.log(`calculated size for everything: ${bytes(size)} (${size} bytes)`);
@@ -96,8 +96,8 @@ async function calculateSize(boardName: string) {
 
   await Promise.all(
     images.map((image) =>
-      fetchImage(image, agent).then((data) => (size += data))
-    )
+      fetchImage(image, agent).then((data) => (size += data)),
+    ),
   );
 
   console.log(`${board.board} calculated size: ${bytes(size)} (${size} bytes)`);

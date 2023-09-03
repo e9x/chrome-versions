@@ -28,7 +28,7 @@ let initReq = 0;
 let realReq = 0;
 
 const testMP = db.prepare(
-  "SELECT COUNT(*) FROM cros_recovery_image WHERE board = ? AND platform = ? AND chrome = ? AND mp_token = ? AND mp_key = ? AND channel = ?;"
+  "SELECT COUNT(*) FROM cros_recovery_image WHERE board = ? AND platform = ? AND chrome = ? AND mp_token = ? AND mp_key = ? AND channel = ?;",
 );
 
 async function executeMP(
@@ -36,7 +36,7 @@ async function executeMP(
   build: cros_build,
   mp_key: number,
   agent: Agent,
-  signal?: AbortSignal
+  signal?: AbortSignal,
 ): Promise<Executed> {
   const image: cros_recovery_image = {
     board: target.board,
@@ -54,7 +54,7 @@ async function executeMP(
     image.chrome,
     image.mp_token,
     image.mp_key,
-    image.channel
+    image.channel,
   ) as { "COUNT(*)": number };
 
   if (count) throw new Error("Already fetched");
@@ -91,11 +91,11 @@ async function executeMP(
 type SomeData = [
   lastModified: Date,
   image: cros_recovery_image,
-  build: cros_build
+  build: cros_build,
 ];
 
 const getTarget = db.prepare(
-  "SELECT * FROM cros_target WHERE board = ? LIMIT 1;"
+  "SELECT * FROM cros_target WHERE board = ? LIMIT 1;",
 );
 
 interface Executed {
@@ -128,7 +128,7 @@ const bruteforce = async (board: string) => {
   const stableBuilds = (
     db
       .prepare<[]>(
-        "SELECT * FROM cros_build WHERE channel = 'stable-channel' ORDER BY platform ASC;"
+        "SELECT * FROM cros_build WHERE channel = 'stable-channel' ORDER BY platform ASC;",
       )
       .all() as cros_build[]
   ).filter((build) => parseChromeVersion(build.chrome)[0] >= 20);
@@ -181,11 +181,11 @@ const bruteforce = async (board: string) => {
                     build.platform,
                     err.message
                   );*/
-                })
+                }),
             );
 
           await Promise.all(p);
-        })
+        }),
     );
 
   await Promise.all(p);

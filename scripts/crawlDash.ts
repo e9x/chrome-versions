@@ -22,7 +22,7 @@ const brands: cros_brand[] = [];
 
 // we use the fetch endpoint... Google has hidden the recovery urls!
 const res = await fetch(
-  "https://chromiumdash.appspot.com/cros/fetch_serving_builds?deviceCategory=Chrome%20OS"
+  "https://chromiumdash.appspot.com/cros/fetch_serving_builds?deviceCategory=Chrome%20OS",
 );
 
 if (!res.ok) throw new Error("Fetching CSV was not OK.");
@@ -60,7 +60,7 @@ interface FetchedData {
 const json = (await res.json()) as FetchedData;
 
 const dataContainsModels = (
-  data: FetchedModel | FetchedModels
+  data: FetchedModel | FetchedModels,
 ): data is FetchedModels => "models" in data;
 
 const addBrands = (brandNames: string[], board: string) => {

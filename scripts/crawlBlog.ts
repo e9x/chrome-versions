@@ -81,7 +81,7 @@ async function* getBlogspot(blogId: string) {
           // TODO: match LTS-96 has been updated in the LTS channel to 96.0.4664.206 (Platform Version: 14268.81.0) for most ChromeOS devices. Want to know more about Long-term Support? Click here.
           {
             const res = content.match(
-              / ([\d.]+) \(platform version: ([\d.]+)\)/i
+              / ([\d.]+) \(platform version: ([\d.]+)\)/i,
             );
 
             if (res) {
@@ -102,12 +102,12 @@ async function* getBlogspot(blogId: string) {
           console.log("Could not match LTS", { title, content });
         } else if (
           /(stable|beta|dev) (channels? (updates?|promotion)|update|(channel )?release)/i.test(
-            title
+            title,
           )
         ) {
           {
             const res = content.match(
-              /the (stable|beta|dev) channel has been updated to ([\d.]+) for windows, mac, (?:and linux|linux,)/i
+              /the (stable|beta|dev) channel has been updated to ([\d.]+) for windows, mac, (?:and linux|linux,)/i,
             );
 
             // we are missing platform!
@@ -131,7 +131,7 @@ async function* getBlogspot(blogId: string) {
           // format only used for dev and beta so far
           {
             const res = content.match(
-              /The (Dev|Beta) channel is being updated to (?:Chrome)?OS version: ([\d.]+)(?:,| and) Browser version: ([\d.]+)/
+              /The (Dev|Beta) channel is being updated to (?:Chrome)?OS version: ([\d.]+)(?:,| and) Browser version: ([\d.]+)/,
             );
 
             if (res) {
@@ -151,7 +151,7 @@ async function* getBlogspot(blogId: string) {
 
           {
             const res = content.match(
-              /the google chrome team is happy to announce the release of chrome [\d.]+ on the (stable|beta|dev) channel.*?chrome version ([\d.]+) \(platform version: ([\d.]+)\)/i
+              /the google chrome team is happy to announce the release of chrome [\d.]+ on the (stable|beta|dev) channel.*?chrome version ([\d.]+) \(platform version: ([\d.]+)\)/i,
             );
 
             if (res) {
@@ -175,7 +175,7 @@ async function* getBlogspot(blogId: string) {
 
           {
             const res = content.match(
-              /the google chrome team is happy to announce the release of chrome \d+ \w+ for chrome os (stable|beta|dev) channel.*?\(R\d+ release ([\d.]+) with Chrome ([\d.]+)\)/i
+              /the google chrome team is happy to announce the release of chrome \d+ \w+ for chrome os (stable|beta|dev) channel.*?\(R\d+ release ([\d.]+) with Chrome ([\d.]+)\)/i,
             );
 
             if (res) {
@@ -195,7 +195,7 @@ async function* getBlogspot(blogId: string) {
 
           {
             const res = content.match(
-              /the google chrome team is happy to announce the release of chrome ([\d.]+) \(platform version: ([\d.]+)\) on the (stable|beta|dev) channel/i
+              /the google chrome team is happy to announce the release of chrome ([\d.]+) \(platform version: ([\d.]+)\) on the (stable|beta|dev) channel/i,
             );
 
             if (res) {
@@ -219,7 +219,7 @@ async function* getBlogspot(blogId: string) {
 
           {
             const res = content.match(
-              /the google chrome team is happy to announce the release of chrome \d+ (?:\w+ )?(?:on the|for Chrome OS) (stable|beta|dev) channel for chromebooks \(.*?\)\. chrome version ([\d.]+) \(platform version ([\d.]+)\)/i
+              /the google chrome team is happy to announce the release of chrome \d+ (?:\w+ )?(?:on the|for Chrome OS) (stable|beta|dev) channel for chromebooks \(.*?\)\. chrome version ([\d.]+) \(platform version ([\d.]+)\)/i,
             );
 
             if (res) {
@@ -243,7 +243,7 @@ async function* getBlogspot(blogId: string) {
 
           {
             const res = content.match(
-              /the (stable|beta|dev) channel has been updated to ([\d.]+) for chromebooks:/i
+              /the (stable|beta|dev) channel has been updated to ([\d.]+) for chromebooks:/i,
             );
 
             if (res) {
@@ -256,7 +256,7 @@ async function* getBlogspot(blogId: string) {
                 (match, platform: string) => {
                   platforms.push(platform);
                   return "";
-                }
+                },
               );
 
               for (const platform of platforms) {
@@ -276,7 +276,7 @@ async function* getBlogspot(blogId: string) {
           // legacy (newer)
           {
             const res = content.match(
-              /the (stable|beta|dev) channel has been updated to ([\d.]+) for the devices listed below:(.*?)/i
+              /the (stable|beta|dev) channel has been updated to ([\d.]+) for the devices listed below:(.*?)/i,
             );
 
             if (res) {
@@ -288,7 +288,7 @@ async function* getBlogspot(blogId: string) {
                 (match, platform: string) => {
                   platforms.push(platform);
                   return "";
-                }
+                },
               );
 
               for (const platform of platforms) {
@@ -308,7 +308,7 @@ async function* getBlogspot(blogId: string) {
           // legacy (newer)
           {
             const res = content.match(
-              /the (stable|beta|dev) channel has been updated to ([\d.]+) for all (?:chrome os devices|platforms including chromebooks) \(Platform versions?: (.*?)\)/i
+              /the (stable|beta|dev) channel has been updated to ([\d.]+) for all (?:chrome os devices|platforms including chromebooks) \(Platform versions?: (.*?)\)/i,
             );
 
             if (res) {
@@ -321,7 +321,7 @@ async function* getBlogspot(blogId: string) {
                 (match, platform: string) => {
                   platforms.push(platform);
                   return "";
-                }
+                },
               );
 
               for (const platform of platforms) {
@@ -341,7 +341,7 @@ async function* getBlogspot(blogId: string) {
           // legacy
           {
             const res = content.match(
-              /the (stable|beta|dev) channel has been updated to ([\d.]+). platform version: ([\d.]+)/i
+              /the (stable|beta|dev) channel has been updated to ([\d.]+). platform version: ([\d.]+)/i,
             );
 
             if (res) {
@@ -362,7 +362,7 @@ async function* getBlogspot(blogId: string) {
           // legacy
           {
             const res = content.match(
-              /the (stable|beta|dev) channel has been updated to ([\d.]+). the platform version /i
+              /the (stable|beta|dev) channel has been updated to ([\d.]+). the platform version /i,
             );
 
             if (res) {
@@ -396,7 +396,7 @@ async function* getBlogspot(blogId: string) {
           // legacy
           {
             const res = content.match(
-              /the Chrome OS (stable|beta|dev) channel has been updated to ([\d.]+) with chrome ([\d.]+)/i
+              /the Chrome OS (stable|beta|dev) channel has been updated to ([\d.]+) with chrome ([\d.]+)/i,
             );
 
             if (res) {
@@ -420,7 +420,7 @@ async function* getBlogspot(blogId: string) {
           {
             // exact version wasnt specified...
             const res = content.match(
-              /the chrome os (stable|beta|dev) channel has been updated to (?:the latest )?R(\d+) release ([\d.]+) including (?:the new chrome|chrome (?:update ))?(?: (\d+) )?/i
+              /the chrome os (stable|beta|dev) channel has been updated to (?:the latest )?R(\d+) release ([\d.]+) including (?:the new chrome|chrome (?:update ))?(?: (\d+) )?/i,
             );
 
             if (res) {
@@ -444,7 +444,7 @@ async function* getBlogspot(blogId: string) {
           // legacy (early)
           {
             const res = content.match(
-              /the chrome os (stable|beta|dev) channel has been updated to (?:the latest )?R\d+ release ([\d.]+) including (?:the new chrome|chrome (?:update ))?(?: \d+ )?\(?([\d.]+)\)?/i
+              /the chrome os (stable|beta|dev) channel has been updated to (?:the latest )?R\d+ release ([\d.]+) including (?:the new chrome|chrome (?:update ))?(?: \d+ )?\(?([\d.]+)\)?/i,
             );
 
             if (res) {
@@ -464,7 +464,7 @@ async function* getBlogspot(blogId: string) {
 
           {
             const res = content.match(
-              /(the (?:(?:stable|beta|dev)(?: and )?)+) channels? (?:(?:(?:has|have) been|is being) (?:updated|released) to (?:chrome versions?:? )?)?([\d\s.,/]+) ?\(platform versions?:? ([\d\s.,/]+)\)?/i
+              /(the (?:(?:stable|beta|dev)(?: and )?)+) channels? (?:(?:(?:has|have) been|is being) (?:updated|released) to (?:chrome versions?:? )?)?([\d\s.,/]+) ?\(platform versions?:? ([\d\s.,/]+)\)?/i,
             );
 
             if (!res) {

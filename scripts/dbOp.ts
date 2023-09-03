@@ -13,10 +13,10 @@ export const insertBuild = db.prepare<
   [
     platform: cros_build["platform"],
     chrome: cros_build["chrome"],
-    channel: cros_build["channel"]
+    channel: cros_build["channel"],
   ]
 >(
-  "INSERT OR IGNORE INTO cros_build (platform, chrome, channel) VALUES (?, ?, ?);"
+  "INSERT OR IGNORE INTO cros_build (platform, chrome, channel) VALUES (?, ?, ?);",
 );
 
 export const insertManyBuilds = db.transaction((builds: cros_build[]) => {
@@ -28,10 +28,10 @@ export const insertTarget = db.prepare<
   [
     board: cros_target["board"],
     mp_token: cros_target["mp_token"],
-    mp_key_max: cros_target["mp_key_max"]
+    mp_key_max: cros_target["mp_key_max"],
   ]
 >(
-  "INSERT OR IGNORE INTO cros_target (board, mp_token, mp_key_max) VALUES (?, ?, ?);"
+  "INSERT OR IGNORE INTO cros_target (board, mp_token, mp_key_max) VALUES (?, ?, ?);",
 );
 
 export const insertManyTargets = db.transaction((targets: cros_target[]) => {
@@ -55,10 +55,10 @@ export const insertRecoveryImage = db.prepare<
     mp_token: cros_recovery_image_db["mp_token"],
     mp_key: cros_recovery_image_db["mp_key"],
     channel: cros_recovery_image_db["channel"],
-    last_modified: cros_recovery_image_db["last_modified"]
+    last_modified: cros_recovery_image_db["last_modified"],
   ]
 >(
-  "INSERT OR IGNORE INTO cros_recovery_image (board, platform, chrome, mp_token, mp_key, channel, last_modified) VALUES (?, ?, ?, ?, ?, ?, ?);"
+  "INSERT OR IGNORE INTO cros_recovery_image (board, platform, chrome, mp_token, mp_key, channel, last_modified) VALUES (?, ?, ?, ?, ?, ?, ?);",
 );
 
 export const insertManyRecoveryImage = db.transaction(
@@ -71,7 +71,7 @@ export const insertManyRecoveryImage = db.transaction(
         image.mp_token,
         image.mp_key,
         image.channel,
-        image.last_modified
+        image.last_modified,
       );
-  }
+  },
 );

@@ -69,7 +69,7 @@ export interface cros_target {
  */
 export const getRecoveryURL: (
   image: cros_recovery_image,
-  secure?: boolean
+  secure?: boolean,
 ) => string;
 
 /**
@@ -84,9 +84,13 @@ export const isValidBuild: (build: unknown) => build is cros_build;
 /**
  * @see {@link|https://www.chromium.org/developers/version-numbers/}
  */
-export const parseChromeVersion: (version: string) => [major: number, minor: number, build: number, patch: number];
+export const parseChromeVersion: (
+  version: string,
+) => [major: number, minor: number, build: number, patch: number];
 
 /**
  * @see {@link|https://www.chromium.org/developers/version-numbers/}
  */
-export const parsePlatformVersion: (version: string) => [tip: number,  build: number, subbranch: number];
+export const parsePlatformVersion: (
+  version: string,
+) => [tip: number, build: number, subbranch: number];
