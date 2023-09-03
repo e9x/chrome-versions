@@ -121,7 +121,7 @@ const bruteforce = async (board: string) => {
 
   console.log("Builds may seem to be out of order, this is expected.");
 
-  const target = getTarget.get(board);
+  const target = getTarget.get(board) as cros_target;
 
   if (!target) throw new Error(`Cannot find target ${board}`);
 
