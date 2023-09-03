@@ -27,13 +27,13 @@
     }
   },
   "scripts": {
-    "init": "ts-node-esm scripts/initDatabase.ts",
-    "crawlBlog": "ts-node-esm scripts/crawlBlog.ts",
-    "crawlDash": "ts-node-esm scripts/crawlDash.ts",
-    "crawlRecovery": "ts-node-esm scripts/crawlRecovery.ts",
-    "crawlTargets": "ts-node-esm scripts/crawlTargets.ts",
-    "bruteforce": "ts-node-esm scripts/bruteforce.ts",
-    "manualBuilds": "ts-node-esm scripts/manualBuilds.ts"
+    "init": "node --loader=ts-node/esm scripts/initDatabase.ts",
+    "crawlBlog": "node --loader=ts-node/esm scripts/crawlBlog.ts",
+    "crawlDash": "node --loader=ts-node/esm scripts/crawlDash.ts",
+    "crawlRecovery": "node --loader=ts-node/esm scripts/crawlRecovery.ts",
+    "crawlTargets": "node --loader=ts-node/esm scripts/crawlTargets.ts",
+    "bruteforce": "node --loader=ts-node/esm scripts/bruteforce.ts",
+    "manualBuilds": "node --loader=ts-node/esm scripts/manualBuilds.ts"
   },
   "devDependencies": {
     "@ianvs/prettier-plugin-sort-imports": "^3.7.1",
