@@ -1,6 +1,10 @@
-import type { cros_brand, cros_target } from "../lib/index";
+import type { cros_brand, cros_build, cros_target } from "../lib/index";
 import { parseRecoveryURL } from "../lib/index.js";
-import { insertManyBrands, insertManyTargets } from "./dbOp.js";
+import {
+  insertManyBrands,
+  insertManyBuilds,
+  insertManyTargets,
+} from "./dbOp.js";
 import fetch from "node-fetch";
 
 interface RecoveryTarget {
@@ -19,7 +23,7 @@ interface RecoveryTarget {
   url: string;
   version: string;
   zipfilesize: number;
-  chrome_version: string;
+  chrome_version?: string;
   hwids: string[];
 }
 
@@ -39,9 +43,17 @@ for (const jsonURL of [
 
 const targets: cros_target[] = [];
 const brands: cros_brand[] = [];
+const builds: cros_build[] = [];
 
 for (const target of recoveryTargets) {
   const parsedImg = parseRecoveryURL(target.url);
+
+  if (target.chrome_version)
+    builds.push({
+      channel: parsedImg.channel,
+      chrome: target.chrome_version,
+      platform: parsedImg.platform,
+    });
 
   // assume mp_token is the max bc the json is the latest
   targets.push({
@@ -55,6 +67,8 @@ for (const target of recoveryTargets) {
 
 console.log("Found", targets.length, "targets");
 console.log("Found", brands.length, "brands");
+console.log("Found", builds.length, "builds");
 
 insertManyTargets(targets);
 insertManyBrands(brands);
+insertManyBuilds(builds);
