@@ -1,3 +1,4 @@
+import { config } from "dotenv";
 import type { cros_build, cros_channel } from "../lib/index";
 import {
   isValidBuild,
@@ -11,9 +12,11 @@ import { stripHtml } from "string-strip-html";
 
 // try it: https://developers.google.com/blogger/docs/3.0/reference/posts/list?apix_params=%7B%22blogId%22%3A%228982037438137564684%22%7D
 
-const [, , googleAPIKey] = process.argv;
+config();
 
-if (!googleAPIKey) throw new Error("You must specify an API key for blogger.");
+const googleAPIKey = process.env.BLOGGER_API_KEY || "";
+if (!googleAPIKey)
+  throw new Error("You must specify an API key for blogger. (BLOGGER_API_KEY)");
 
 const channelNameToId = (name: string) =>
   `${name.toLowerCase()}-channel` as cros_channel;
