@@ -185,11 +185,15 @@ func main() {
 	builds := getGoodBuilds(db)
 	attempts := getBruteforceAttempts(db)
 
+	fmt.Println("Loaded tables")
+
 	ips, err := net.LookupIP("dl.google.com")
 	if err != nil {
 		fmt.Fprintf(os.Stderr, "Could not get IPs: %v\n", err)
 		os.Exit(1)
 	}
+
+	fmt.Println("Google IP:", ips[0].String())
 
 	type target_new_data struct {
 		name     string
