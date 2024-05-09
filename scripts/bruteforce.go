@@ -264,15 +264,13 @@ func main() {
 					}()
 				}
 
-				for range keys {
+				for _, key := range filtered_keys {
 					r := <-ch
+					new_data.attempts = append(new_data.attempts, bruteforce_attempt{board: target.board, platform: build.platform, mp_key: key})
 					if r != nil {
 						new_data.images = append(new_data.images, r)
 					}
 
-					for _, key := range filtered_keys {
-						new_data.attempts = append(new_data.attempts, bruteforce_attempt{board: target.board, platform: build.platform, mp_key: key})
-					}
 				}
 			}
 
@@ -316,7 +314,7 @@ func main() {
 		for _, attempt := range new_data.attempts {
 			_, err := insert_attempt.Exec(attempt.board, attempt.platform, attempt.mp_key)
 			if err != nil {
-				fmt.Fprintf(os.Stderr, "insert bruteforce_attempt: %v, vals %s %s\n", err, attempt.board, attempt.platform)
+				fmt.Fprintf(os.Stderr, "insert bruteforce_attempt: %v, vals %s %s %d\n", err, attempt.board, attempt.platform, attempt.mp_key)
 				os.Exit(1)
 			}
 			// fmt.Println(r.RowsAffected())
