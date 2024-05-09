@@ -27,11 +27,18 @@ export interface cros_build {
 export const validChannels: cros_channel[];
 
 /**
+ * parsed recovery image url
  * @see {@link|https://www.chromium.org/chromium-os/firmware-porting-guide/2-concepts/#firmware-development}
  */
-export interface cros_recovery_image extends cros_build {
+export interface cros_recovery_image {
+  /** CrOS platform version (e.g. 15117.41.0) */
+  platform: string;
   /** Board codename */
   board: string;
+  /**
+   * release channel id
+   */
+  channel: cros_channel;
   /**
    * Mass production (MP) keys - secret keys. When mp_key === 1, it's version will not be specified in a URL.
    * Anything higher than 1 will show as mp-v$
@@ -44,7 +51,11 @@ export interface cros_recovery_image extends cros_build {
   mp_token: string;
 }
 
+/**
+ * recovery image database row
+ */
 export interface cros_recovery_image_db extends cros_recovery_image {
+  chrome: string;
   /** ISO string of the `last-modified` header received when fetching the image. This is irrelevant unless the value is being read/written to a database. */
   last_modified: string;
 }

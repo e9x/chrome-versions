@@ -3,13 +3,15 @@ import { getRecoveryURL } from "../lib/index.js";
 import type { cros_recovery_image_db, cros_target } from "../lib/index.js";
 import Database from "better-sqlite3";
 import bytes from "bytes";
-import CacheableLookup from "cacheable-lookup";
 import type { Response } from "node-fetch";
 import fetch from "node-fetch";
 import { Agent } from "node:https";
 import os from "node:os";
+import { lookup } from "node:dns/promises";
 
 process.env.UV_THREADPOOL_SIZE = os.cpus().length.toString();
+
+const dlgooglecom = await lookup("dl.google.com", 4);
 
 const db = new Database(chromeDBPath);
 
@@ -73,14 +75,14 @@ async function fetchImage(image: cros_recovery_image_db, agent: Agent) {
 }
 
 async function calculateSize(boardName: string) {
-  const cache = new CacheableLookup();
-
   const agent = new Agent({
-    maxSockets: 1000,
+    maxSockets: 10,
     keepAlive: true,
+    lookup: (hostname, options, cb) => {
+      // @ts-ignore
+      cb(null, [dlgooglecom]);
+    },
   });
-
-  cache.install(agent);
 
   const board = getTarget.get(boardName) as cros_target;
 
