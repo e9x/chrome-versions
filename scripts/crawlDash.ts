@@ -73,32 +73,45 @@ for (const board in json.builds) {
   let mp_key_max = 1; // start at 1
   let mp_token = "mp";
 
-  const readPushRecovery = (image: string, major: number) => {
-    const parsed = parseRecoveryURL(image);
-
+  const readPushRecovery = (image: string) => {
     // can't scrape the build because we only get the major chrome version number
-    // but we can extract mp token stuff
-
-    /*
-    const build = {
-      chrome: major,
-      channel: parsed.channel,
-      platform: parsed.platform,
-    };
-
-    if (!isValidBuild(build))
-      throw new Error(`Invalid build: ${JSON.stringify(build)}`);
-    */
-
-    // collect the build
-    // builds.push(build);
-
-    // for the target
+    // but we can extract mp token and mp key max
+    const parsed = parseRecoveryURL(image);
     if (mp_key_max < parsed.mp_key) mp_key_max = parsed.mp_key;
     mp_token = parsed.mp_token;
   };
 
   const readServings = (model: FetchedModel) => {
+    for (const key in model) {
+      const n = Number(key);
+      if (
+        isNaN(n) ||
+        typeof model[key] !== "object" ||
+        model[key] === null ||
+        "chromeVersion" in model[key]
+      )
+        continue;
+      const release = model[key] as {
+        chromeVersion: string;
+        comparedToMostCommon: number;
+        version: string;
+      };
+
+      const build = {
+        chrome: release.chromeVersion,
+        channel: "stable-channel",
+        platform: release.version,
+      };
+
+      if (!isValidBuild(build))
+        throw new Error(`Invalid build: ${JSON.stringify(build)}`);
+
+      builds.push(build);
+    }
+
+    for (const push in model.pushRecoveries)
+      readPushRecovery(model.pushRecoveries[push]);
+
     if (model.servingStable) {
       const build = {
         chrome: model.servingStable.chromeVersion,
@@ -151,7 +164,8 @@ for (const board in json.builds) {
       builds.push(build);
     }
 
-    if (model.servingLtr) { // LTS
+    if (model.servingLtr) {
+      // LTS
       const build = {
         chrome: model.servingLtr.chromeVersion,
         channel: "lts-channel",
@@ -170,14 +184,10 @@ for (const board in json.builds) {
       const modelData = boardData.models[model];
       readServings(modelData);
       addBrands(modelData.brandNames, board);
-      for (const push in modelData.pushRecoveries)
-        readPushRecovery(modelData.pushRecoveries[push], Number(push));
     }
   else {
     readServings(boardData);
     addBrands(boardData.brandNames, board);
-    for (const push in boardData.pushRecoveries)
-      readPushRecovery(boardData.pushRecoveries[push], Number(push));
   }
 
   targets.push({
