@@ -176,7 +176,7 @@ func main() {
 
 			tr := &http.Transport{
 				// MaxIdleConns:       40,
-				MaxConnsPerHost:    15,
+				MaxConnsPerHost:    40,
 				IdleConnTimeout:    0, // 30 * time.Second,
 				DisableCompression: true,
 			}
