@@ -43,7 +43,6 @@
     "@types/bytes": "^3.1.1",
     "better-sqlite3": "^8.6.0",
     "bytes": "^3.1.2",
-    "cacheable-lookup": "^7.0.0",
     "node-fetch": "^3.3.2",
     "prettier": "^3.0.3",
     "string-strip-html": "^13.4.2",

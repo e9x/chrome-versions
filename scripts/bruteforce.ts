@@ -8,11 +8,11 @@ import type {
 import { parseChromeVersion, getRecoveryURL } from "../lib/index.js";
 import { insertManyRecoveryImage } from "./dbOp.js";
 import Database from "better-sqlite3";
-import CacheableLookup from "cacheable-lookup";
 import type { Response } from "node-fetch";
 import fetch, { AbortError } from "node-fetch";
 import { Agent } from "node:https";
 import os from "node:os";
+import { lookup } from "node:dns/promises";
 
 process.env.UV_THREADPOOL_SIZE = os.cpus().length.toString();
 
@@ -110,15 +110,17 @@ function range(start: number, end: number) {
   return range;
 }
 
-const bruteforce = async (board: string) => {
-  const cache = new CacheableLookup();
+const dlgooglecom = await lookup("dl.google.com", 4);
 
+const bruteforce = async (board: string) => {
   const agent = new Agent({
     maxSockets: 1000,
     keepAlive: true,
+    lookup: (hostname, options, cb) => {
+      // @ts-ignore
+      cb(null, [dlgooglecom]);
+    },
   });
-
-  cache.install(agent);
 
   console.log("Builds may seem to be out of order, this is expected.");
 
