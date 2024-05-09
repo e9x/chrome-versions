@@ -10,21 +10,27 @@ CREATE TABLE cros_recovery_image (
 );
 
 CREATE TABLE cros_target (
-  board TEXT NOT NULL,
+  board TEXT PRIMARY KEY UNIQUE,
   mp_token TEXT NOT NULL,
-  mp_key_max INT NOT NULL,
-  UNIQUE(board)
+  mp_key_max INT NOT NULL
 );
 
 CREATE TABLE cros_brand (
-  board TEXT NOT NULL,
-  brand TEXT NOT NULL,
-  UNIQUE(brand)
+  brand TEXT PRIMARY KEY UNIQUE,
+  board TEXT NOT NULL
 );
 
 CREATE TABLE cros_build (
-  platform TEXT NOT NULL,
+  platform TEXT PRIMARY KEY UNIQUE,
   chrome TEXT NOT NULL,
-  channel TEXT NOT NULL,
-  UNIQUE(platform)
+  channel TEXT NOT NULL
+);
+
+-- row is created to indicate that PLATFORM for BOARD was bruteforced and shouldn't be reattempted
+-- does not mean it was successful or failed
+-- success can be determined by checking if a cros_recovery_image with this build exists
+CREATE TABLE bruteforce_attempt (
+  board TEXT NOT NULL,
+  platform TEXT NOT NULL,
+  UNIQUE(board, platform)
 );

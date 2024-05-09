@@ -35,7 +35,6 @@
     "crawlBlog": "vite-node scripts/crawlBlog.ts",
     "crawlDash": "vite-node scripts/crawlDash.ts",
     "crawlRecovery": "vite-node scripts/crawlRecovery.ts",
-    "bruteforce": "vite-node scripts/bruteforce.ts",
     "manualBuilds": "vite-node scripts/manualBuilds.ts"
   },
   "devDependencies": {
