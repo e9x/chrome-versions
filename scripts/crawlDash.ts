@@ -7,7 +7,7 @@
  * for example, running crawlBlog will miss the non-scrubbed v92 platform version: 13982.88.0
  */
 
-import { parseRecoveryURL } from "../lib/index.js";
+import { isValidBuild, parseRecoveryURL } from "../lib/index.js";
 import type { cros_brand, cros_build, cros_target } from "../lib/index.js";
 import {
   insertManyTargets,
@@ -73,33 +73,111 @@ for (const board in json.builds) {
   let mp_key_max = 1; // start at 1
   let mp_token = "mp";
 
-  const readPushRecovery = (image: string) => {
+  const readPushRecovery = (image: string, major: number) => {
     const parsed = parseRecoveryURL(image);
 
-    // collect the build
-    builds.push({
-      chrome: parsed.chrome,
+    // can't scrape the build because we only get the major chrome version number
+    // but we can extract mp token stuff
+
+    /*
+    const build = {
+      chrome: major,
       channel: parsed.channel,
       platform: parsed.platform,
-    });
+    };
+
+    if (!isValidBuild(build))
+      throw new Error(`Invalid build: ${JSON.stringify(build)}`);
+    */
+
+    // collect the build
+    // builds.push(build);
 
     // for the target
     if (mp_key_max < parsed.mp_key) mp_key_max = parsed.mp_key;
     mp_token = parsed.mp_token;
   };
 
+  const readServings = (model: FetchedModel) => {
+    if (model.servingStable) {
+      const build = {
+        chrome: model.servingStable.chromeVersion,
+        channel: "stable-channel",
+        platform: model.servingStable.version,
+      };
+
+      if (!isValidBuild(build))
+        throw new Error(`Invalid build: ${JSON.stringify(build)}`);
+
+      builds.push(build);
+    }
+
+    if (model.servingBeta) {
+      const build = {
+        chrome: model.servingBeta.chromeVersion,
+        channel: "beta-channel",
+        platform: model.servingBeta.version,
+      };
+
+      if (!isValidBuild(build))
+        throw new Error(`Invalid build: ${JSON.stringify(build)}`);
+
+      builds.push(build);
+    }
+
+    if (model.servingDev) {
+      const build = {
+        chrome: model.servingDev.chromeVersion,
+        channel: "dev-channel",
+        platform: model.servingDev.version,
+      };
+
+      if (!isValidBuild(build))
+        throw new Error(`Invalid build: ${JSON.stringify(build)}`);
+
+      builds.push(build);
+    }
+
+    if (model.servingLtc) {
+      const build = {
+        chrome: model.servingLtc.chromeVersion,
+        channel: "ltc-channel",
+        platform: model.servingLtc.version,
+      };
+
+      if (!isValidBuild(build))
+        throw new Error(`Invalid build: ${JSON.stringify(build)}`);
+
+      builds.push(build);
+    }
+
+    if (model.servingLtr) { // LTS
+      const build = {
+        chrome: model.servingLtr.chromeVersion,
+        channel: "lts-channel",
+        platform: model.servingLtr.version,
+      };
+
+      if (!isValidBuild(build))
+        throw new Error(`Invalid build: ${JSON.stringify(build)}`);
+
+      builds.push(build);
+    }
+  };
+
   if (dataContainsModels(boardData))
     for (const model in boardData.models) {
       const modelData = boardData.models[model];
+      readServings(modelData);
       addBrands(modelData.brandNames, board);
       for (const push in modelData.pushRecoveries)
-        readPushRecovery(modelData.pushRecoveries[push]);
+        readPushRecovery(modelData.pushRecoveries[push], Number(push));
     }
   else {
+    readServings(boardData);
     addBrands(boardData.brandNames, board);
-    for (const push in boardData.pushRecoveries) {
-      readPushRecovery(boardData.pushRecoveries[push]);
-    }
+    for (const push in boardData.pushRecoveries)
+      readPushRecovery(boardData.pushRecoveries[push], Number(push));
   }
 
   targets.push({

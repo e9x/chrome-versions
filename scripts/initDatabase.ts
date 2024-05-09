@@ -1,6 +1,6 @@
 import { chromeDBPath } from "../lib/db.js";
 import Database from "better-sqlite3";
-import { mkdir, rm } from "node:fs/promises";
+import { mkdir, rm, readFile } from "node:fs/promises";
 import { dirname } from "node:path";
 
 try {
@@ -18,35 +18,8 @@ try {
 
 const db = new Database(chromeDBPath);
 
-db.exec(`CREATE TABLE cros_recovery_image (
-  board TEXT NOT NULL,
-  platform TEXT NOT NULL,
-  chrome TEXT NOT NULL,
-  mp_token TEXT NOT NULL,
-  mp_key INT NOT NULL,
-  channel TEXT NOT NULL CHECK(channel = 'stable-channel' OR channel = 'beta-channel' OR channel = 'dev-channel'),
-  last_modified TEXT NOT NULL,
-  UNIQUE(board, platform)
-);`);
+const cmds = await readFile(new URL("../db.sql", import.meta.url), "utf-8")
 
-db.exec(`CREATE TABLE cros_target (
-  board TEXT NOT NULL,
-  mp_token TEXT NOT NULL,
-  mp_key_max INT NOT NULL,
-  UNIQUE(board)
-);`);
-
-db.exec(`CREATE TABLE cros_brand (
-  board TEXT NOT NULL,
-  brand TEXT NOT NULL,
-  UNIQUE(brand)
-);`);
-
-db.exec(`CREATE TABLE cros_build (
-  platform TEXT NOT NULL,
-  chrome TEXT NOT NULL,
-  channel TEXT NOT NULL CHECK(channel = 'stable-channel' OR channel = 'beta-channel' OR channel = 'dev-channel'),
-  UNIQUE(platform)
-);`);
+db.exec(cmds);
 
 console.log("Database initialized.");

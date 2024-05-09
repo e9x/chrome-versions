@@ -7,7 +7,7 @@ import type {
 } from "../lib/index.js";
 import Database from "better-sqlite3";
 
-const db = new Database(chromeDBPath);
+export const db = new Database(chromeDBPath);
 
 export const insertBuild = db.prepare<
   [
