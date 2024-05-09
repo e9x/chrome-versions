@@ -27,6 +27,12 @@ type cros_recovery_image struct {
 	mp_token string
 }
 
+type cros_recovery_image_db struct {
+	img          cros_recovery_image
+	lastModified time.Time
+	chrome       string
+}
+
 func (i *cros_recovery_image) URL(secure bool) string {
 	v := ""
 
@@ -95,14 +101,14 @@ func getTargets(db *sql.DB) []cros_target {
 
 func getBruteforceAttempts(db *sql.DB) []bruteforce_attempt {
 	attempts := []bruteforce_attempt{}
-	rows, err := db.Query("SELECT board,platform FROM bruteforce_attempt")
+	rows, err := db.Query("SELECT board,platform,mp_key FROM bruteforce_attempt")
 	if err != nil {
 		fmt.Fprintf(os.Stderr, "Query: %v", err)
 		os.Exit(1)
 	}
 	for rows.Next() {
 		attempt := bruteforce_attempt{}
-		err = rows.Scan(&attempt.board, &attempt.platform)
+		err = rows.Scan(&attempt.board, &attempt.platform, &attempt.mp_key)
 		if err != nil {
 			fmt.Fprintf(os.Stderr, "Scan: %v", err)
 			os.Exit(1)
@@ -137,6 +143,36 @@ func getGoodBuilds(db *sql.DB) []cros_build {
 	return builds
 }
 
+/*
+board TEXT NOT NULL,
+
+	platform TEXT NOT NULL,
+	chrome TEXT NOT NULL,
+	mp_token TEXT NOT NULL,
+	mp_key INT NOT NULL,
+	channel TEXT NOT NULL,
+	last_modified TEXT NOT NULL,
+*/
+func getImages(db *sql.DB) []cros_recovery_image_db {
+	images := []cros_recovery_image_db{}
+	rows, err := db.Query("SELECT board,platform,chrome,mp_token,mp_key,channel,last_modified FROM cros_recovery_image WHERE channel = 'stable-channel'")
+	if err != nil {
+		fmt.Fprintf(os.Stderr, "Query: %v", err)
+		os.Exit(1)
+	}
+	for rows.Next() {
+		image := cros_recovery_image_db{}
+		err = rows.Scan(&image.img.board, &image.img.platform, &image.chrome, &image.img.mp_token, &image.img.mp_key, &image.img.channel, &image.lastModified)
+		if err != nil {
+			fmt.Fprintf(os.Stderr, "Scan: %v", err)
+			os.Exit(1)
+		}
+		images = append(images, image)
+	}
+
+	return images
+}
+
 func main() {
 	db, err := sql.Open("sqlite3", "./dist/chrome.db")
 	if err != nil {
@@ -145,6 +181,7 @@ func main() {
 	}
 
 	targets := getTargets(db)
+	images := getImages(db)
 	builds := getGoodBuilds(db)
 	attempts := getBruteforceAttempts(db)
 
@@ -152,12 +189,6 @@ func main() {
 	if err != nil {
 		fmt.Fprintf(os.Stderr, "Could not get IPs: %v\n", err)
 		os.Exit(1)
-	}
-
-	type cros_recovery_image_db struct {
-		img          *cros_recovery_image
-		lastModified time.Time
-		chrome       string
 	}
 
 	type target_new_data struct {
@@ -204,21 +235,36 @@ func main() {
 
 			keyLoop:
 				for _, key := range keys {
-					for a := range attempted_keys {
-						if attempted_keys[a] == key {
+					for _, attempt := range attempted_keys {
+						if attempt == key {
 							continue keyLoop
 						}
 					}
 
 					filtered_keys = append(filtered_keys, key)
+					new_data.attempts = append(new_data.attempts, bruteforce_attempt{board: target.board, platform: build.platform, mp_key: key})
 				}
 
 				ch := make(chan *cros_recovery_image_db, len(filtered_keys))
+
+				// if the data already exists for PLATFORM on BOARD in recovery images and nothing needs to be done
+				alreadyFetched := false
+				for i := range images {
+					if images[i].img.board == target.board && images[i].img.platform == build.platform && images[i].img.channel == build.channel {
+						alreadyFetched = true
+						break
+					}
+				}
 
 				for _, key := range filtered_keys {
 					key := key
 
 					go func() {
+						if alreadyFetched {
+							ch <- nil
+							return
+						}
+
 						img := cros_recovery_image{
 							platform: build.platform,
 							channel:  build.channel,
@@ -247,7 +293,7 @@ func main() {
 							if res.StatusCode != 200 {
 								ch <- nil
 							} else {
-								r := cros_recovery_image_db{img: &img, chrome: build.chrome}
+								r := cros_recovery_image_db{img: img, chrome: build.chrome}
 								// r.lastModified
 								lastModified := res.Header.Get("last-modified")
 								parsed, err := time.Parse(time.RFC1123, lastModified)
@@ -264,13 +310,11 @@ func main() {
 					}()
 				}
 
-				for _, key := range filtered_keys {
+				for range filtered_keys {
 					r := <-ch
-					new_data.attempts = append(new_data.attempts, bruteforce_attempt{board: target.board, platform: build.platform, mp_key: key})
 					if r != nil {
 						new_data.images = append(new_data.images, r)
 					}
-
 				}
 			}
 
@@ -303,7 +347,7 @@ func main() {
 
 		for _, i := range new_data.images {
 			fmt.Println("FOUND", i.img.URL(false), i.lastModified.String())
-			_, err := insert_img.Exec(i.img.board, i.img.platform, i.chrome, i.img.mp_token, i.img.mp_key, i.img.channel, i.lastModified.Format(time.RFC3339))
+			_, err := insert_img.Exec(i.img.board, i.img.platform, i.chrome, i.img.mp_token, i.img.mp_key, i.img.channel, i.lastModified)
 			if err != nil {
 				fmt.Fprintf(os.Stderr, "insert cros_recovery_image: %v\n", err)
 				os.Exit(1)

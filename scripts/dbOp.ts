@@ -1,5 +1,6 @@
 import { chromeDBPath } from "../lib/db.js";
 import type {
+  bruteforce_attempt,
   cros_brand,
   cros_build,
   cros_recovery_image_db,
@@ -55,15 +56,15 @@ export const insertRecoveryImage = db.prepare<
     mp_token: cros_recovery_image_db["mp_token"],
     mp_key: cros_recovery_image_db["mp_key"],
     channel: cros_recovery_image_db["channel"],
-    last_modified: cros_recovery_image_db["last_modified"],
+    last_modified: number,
   ]
 >(
-  "INSERT OR IGNORE INTO cros_recovery_image (board, platform, chrome, mp_token, mp_key, channel, last_modified) VALUES (?, ?, ?, ?, ?, ?, ?);",
+  "INSERT OR IGNORE INTO cros_recovery_image (board, platform, chrome, mp_token, mp_key, channel, last_modified) VALUES (?, ?, ?, ?, ?, ?, datetime(?, 'unixepoch'));",
 );
 
 export const insertManyRecoveryImage = db.transaction(
   (images: cros_recovery_image_db[]) => {
-    for (const image of images)
+    for (const image of images) {
       insertRecoveryImage.run(
         image.board,
         image.platform,
@@ -71,7 +72,29 @@ export const insertManyRecoveryImage = db.transaction(
         image.mp_token,
         image.mp_key,
         image.channel,
-        image.last_modified,
+        image.last_modified.getTime(),
+      );
+    }
+  },
+);
+
+export const insertBruteforceAttempt = db.prepare<
+  [
+    board: cros_target["board"],
+    mp_token: cros_target["mp_token"],
+    mp_key_max: cros_target["mp_key_max"],
+  ]
+>(
+  "INSERT OR REPLACE INTO bruteforce_attempt (board, platform, mp_key) VALUES (?, ?, ?);",
+);
+
+export const insertManyBruteforceAttempt = db.transaction(
+  (attempts: bruteforce_attempt[]) => {
+    for (const attempt of attempts)
+      insertBruteforceAttempt.run(
+        attempt.board,
+        attempt.platform,
+        attempt.mp_key,
       );
   },
 );

@@ -1,5 +1,6 @@
 import Database from "better-sqlite3";
 import type {
+  bruteforce_attempt,
   cros_brand,
   cros_build,
   cros_recovery_image_db,
@@ -11,6 +12,8 @@ import {
   insertManyBrands,
   insertManyBuilds,
   insertManyRecoveryImage,
+  insertManyBruteforceAttempt,
+  db,
 } from "./dbOp.js";
 
 // rename the older database with a bunch of constraints on the columns to crapdb.db and put it in the dist dir
@@ -34,5 +37,14 @@ insertManyBuilds(
 insertManyRecoveryImage(
   oldDB
     .prepare("SELECT * FROM cros_recovery_image")
-    .all() as cros_recovery_image_db[],
+    .all()
+    .map((e: any) => {
+      e.last_modified = new Date(e.last_modified);
+      return e;
+    }) as cros_recovery_image_db[],
+);
+insertManyBruteforceAttempt(
+  oldDB
+    .prepare("SELECT * FROM bruteforce_attempt")
+    .all() as bruteforce_attempt[],
 );
