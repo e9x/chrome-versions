@@ -63,10 +63,6 @@ const dataContainsModels = (
   data: FetchedModel | FetchedModels,
 ): data is FetchedModels => "models" in data;
 
-const addBrands = (brandNames: string[], board: string) => {
-  for (const brand of brandNames) brands.push({ board, brand });
-};
-
 for (const board in json.builds) {
   const boardData = json.builds[board];
 
@@ -82,6 +78,8 @@ for (const board in json.builds) {
   };
 
   const readServings = (model: FetchedModel) => {
+    for (const brand of model.brandNames) brands.push({ board, brand });
+
     for (const key in model) {
       const n = Number(key);
       if (
@@ -183,11 +181,9 @@ for (const board in json.builds) {
     for (const model in boardData.models) {
       const modelData = boardData.models[model];
       readServings(modelData);
-      addBrands(modelData.brandNames, board);
     }
   else {
     readServings(boardData);
-    addBrands(boardData.brandNames, board);
   }
 
   targets.push({
