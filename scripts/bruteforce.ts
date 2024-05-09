@@ -10,7 +10,7 @@ import { insertManyRecoveryImage } from "./dbOp.js";
 import Database from "better-sqlite3";
 import type { Response } from "node-fetch";
 import fetch, { AbortError } from "node-fetch";
-import { Agent } from "node:https";
+import { Agent } from "node:http";
 import os from "node:os";
 import { lookup } from "node:dns/promises";
 
@@ -59,7 +59,7 @@ async function executeMP(
 
   if (count) throw new Error("Already fetched");
 
-  const url = getRecoveryURL(image, true);
+  const url = getRecoveryURL(image, false);
   let res: Response;
 
   initReq++;
@@ -73,7 +73,7 @@ async function executeMP(
       if (err instanceof AbortError) throw err;
       console.error(err);
       console.log("retrying");
-      await sleep(100);
+      await sleep(50);
     }
   }
 
@@ -114,8 +114,7 @@ const dlgooglecom = await lookup("dl.google.com", 4);
 
 const bruteforce = async (board: string) => {
   const agent = new Agent({
-    maxSockets: 1000,
-    keepAlive: true,
+    keepAlive: false,
     lookup: (hostname, options, cb) => {
       // @ts-ignore
       cb(null, [dlgooglecom]);
