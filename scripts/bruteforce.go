@@ -58,6 +58,7 @@ type chrome_version struct {
 type bruteforce_attempt struct {
 	board    string
 	platform string
+	mp_key   int
 }
 
 func parseChromeVersion(version string) *chrome_version {
@@ -190,17 +191,31 @@ func main() {
 				keys = append(keys, i)
 			}
 
-		building:
 			for _, build := range builds {
+				attempted_keys := []int{}
+
 				for _, attempt := range attempts {
 					if attempt.board == target.board && attempt.platform == build.platform {
-						continue building
+						attempted_keys = append(attempted_keys, attempt.mp_key)
 					}
 				}
 
-				ch := make(chan *cros_recovery_image_db, len(keys))
+				filtered_keys := []int{}
 
+			keyLoop:
 				for _, key := range keys {
+					for a := range attempted_keys {
+						if attempted_keys[a] == key {
+							continue keyLoop
+						}
+					}
+
+					filtered_keys = append(filtered_keys, key)
+				}
+
+				ch := make(chan *cros_recovery_image_db, len(filtered_keys))
+
+				for _, key := range filtered_keys {
 					key := key
 
 					go func() {
@@ -254,9 +269,11 @@ func main() {
 					if r != nil {
 						new_data.images = append(new_data.images, r)
 					}
-				}
 
-				new_data.attempts = append(new_data.attempts, bruteforce_attempt{board: target.board, platform: build.platform})
+					for _, key := range filtered_keys {
+						new_data.attempts = append(new_data.attempts, bruteforce_attempt{board: target.board, platform: build.platform, mp_key: key})
+					}
+				}
 			}
 
 			target_ch <- &new_data
