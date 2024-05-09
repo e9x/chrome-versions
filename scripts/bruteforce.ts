@@ -73,6 +73,7 @@ async function executeMP(
       if (err instanceof AbortError) throw err;
       console.error(err);
       console.log("retrying");
+      await sleep(100);
     }
   }
 
@@ -213,4 +214,8 @@ if (board) {
     console.log("Bruteforcing", target.board);
     await bruteforce(target.board);
   }
+}
+
+function sleep(ms: number) {
+  return new Promise<void>((resolve) => setTimeout(resolve, ms));
 }
