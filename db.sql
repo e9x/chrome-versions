@@ -33,5 +33,5 @@ CREATE TABLE bruteforce_attempt (
   board TEXT NOT NULL,
   platform TEXT NOT NULL,
   mp_key INT NOT NULL,
-  UNIQUE(board, platform)
+  UNIQUE(board, platform, mp_key)
 );
