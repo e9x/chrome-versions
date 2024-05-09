@@ -291,7 +291,7 @@ func main() {
 			os.Exit(1)
 		}
 
-		insert_attempt, err := tx.Prepare("INSERT INTO bruteforce_attempt (board,platform) VALUES (?,?)")
+		insert_attempt, err := tx.Prepare("INSERT INTO bruteforce_attempt (board,platform,mp_key) VALUES (?,?,?)")
 		if err != nil {
 			fmt.Fprintf(os.Stderr, "insert_attempt: %v\n", err)
 			os.Exit(1)
@@ -314,7 +314,7 @@ func main() {
 		}
 
 		for _, attempt := range new_data.attempts {
-			_, err := insert_attempt.Exec(attempt.board, attempt.platform)
+			_, err := insert_attempt.Exec(attempt.board, attempt.platform, attempt.mp_key)
 			if err != nil {
 				fmt.Fprintf(os.Stderr, "insert bruteforce_attempt: %v, vals %s %s\n", err, attempt.board, attempt.platform)
 				os.Exit(1)
