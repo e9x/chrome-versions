@@ -312,5 +312,6 @@ func main() {
 		}
 	}
 
+	fmt.Println("DONE")
 	db.Close()
 }
