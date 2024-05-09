@@ -56,7 +56,7 @@ export const insertRecoveryImage = db.prepare<
     mp_token: cros_recovery_image_db["mp_token"],
     mp_key: cros_recovery_image_db["mp_key"],
     channel: cros_recovery_image_db["channel"],
-    last_modified: number,
+    last_modified: cros_recovery_image_db["last_modified"],
   ]
 >(
   "INSERT OR REPLACE INTO cros_recovery_image (board,platform,chrome,mp_token,mp_key,channel,last_modified) VALUES (?,?,?,?,?,?,?);",
@@ -72,7 +72,7 @@ export const insertManyRecoveryImage = db.transaction(
         image.mp_token,
         image.mp_key,
         image.channel,
-        image.last_modified.getTime(),
+        image.last_modified,
       );
     }
   },

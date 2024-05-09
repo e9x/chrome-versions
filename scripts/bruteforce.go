@@ -29,7 +29,7 @@ type cros_recovery_image struct {
 
 type cros_recovery_image_db struct {
 	img          cros_recovery_image
-	lastModified time.Time
+	lastModified string
 	chrome       string
 }
 
@@ -306,7 +306,7 @@ func main() {
 									fmt.Fprintf(os.Stderr, "parse time: %v\n", err)
 									os.Exit(1)
 								}
-								r.lastModified = parsed
+								r.lastModified = parsed.Format(time.RFC3339)
 								ch <- &r
 							}
 
@@ -351,7 +351,7 @@ func main() {
 		}
 
 		for _, i := range new_data.images {
-			fmt.Println("FOUND", i.img.URL(false), i.lastModified.String())
+			fmt.Println("FOUND", i.img.URL(false), i.lastModified)
 			_, err := insert_img.Exec(i.img.board, i.img.platform, i.chrome, i.img.mp_token, i.img.mp_key, i.img.channel, i.lastModified)
 			if err != nil {
 				fmt.Fprintf(os.Stderr, "insert cros_recovery_image: %v\n", err)

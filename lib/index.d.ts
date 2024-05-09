@@ -57,7 +57,7 @@ export interface cros_recovery_image {
 export interface cros_recovery_image_db extends cros_recovery_image {
   chrome: string;
   /** ISO string of the `last-modified` header received when fetching the image. This is irrelevant unless the value is being read/written to a database. */
-  last_modified: Date;
+  last_modified: string;
 }
 
 export interface bruteforce_attempt {

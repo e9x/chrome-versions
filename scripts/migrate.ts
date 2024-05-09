@@ -39,7 +39,7 @@ insertManyRecoveryImage(
     .prepare("SELECT * FROM cros_recovery_image")
     .all()
     .map((e: any) => {
-      e.last_modified = new Date(e.last_modified);
+      e.last_modified = new Date(e.last_modified).toISOString();
       return e;
     }) as cros_recovery_image_db[],
 );
