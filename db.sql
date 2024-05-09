@@ -32,5 +32,6 @@ CREATE TABLE cros_build (
 CREATE TABLE bruteforce_attempt (
   board TEXT NOT NULL,
   platform TEXT NOT NULL,
+  mp_key INT NOT NULL,
   UNIQUE(board, platform)
 );
