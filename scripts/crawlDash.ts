@@ -88,7 +88,7 @@ for (const board in json.builds) {
         isNaN(n) ||
         typeof model[key] !== "object" ||
         model[key] === null ||
-        "chromeVersion" in model[key]
+        !("chromeVersion" in model[key])
       )
         continue;
       const release = model[key] as {

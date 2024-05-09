@@ -59,7 +59,7 @@ export const insertRecoveryImage = db.prepare<
     last_modified: number,
   ]
 >(
-  "INSERT OR IGNORE INTO cros_recovery_image (board, platform, chrome, mp_token, mp_key, channel, last_modified) VALUES (?, ?, ?, ?, ?, ?, datetime(?, 'unixepoch'));",
+  "INSERT OR REPLACE INTO cros_recovery_image (board,platform,chrome,mp_token,mp_key,channel,last_modified) VALUES (?,?,?,?,?,?,?);",
 );
 
 export const insertManyRecoveryImage = db.transaction(

@@ -207,7 +207,7 @@ func main() {
 
 			tr := &http.Transport{
 				// MaxIdleConns:       40,
-				MaxConnsPerHost:    40,
+				MaxConnsPerHost:    20,
 				IdleConnTimeout:    0, // 30 * time.Second,
 				DisableCompression: true,
 			}
@@ -273,6 +273,7 @@ func main() {
 							mp_token: target.mp_token,
 						}
 
+						fmt.Println("fetching", img.URL(false))
 						req, err := http.NewRequest("HEAD", img.URL(false), nil)
 						// req host header is already set so we can just set the IP
 						req.Host = ips[0].String()
