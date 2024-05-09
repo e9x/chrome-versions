@@ -31,6 +31,7 @@
   },
   "scripts": {
     "init": "vite-node scripts/initDatabase.ts",
+    "download": "vite-node scripts/download.ts",
     "crawlBlog": "vite-node scripts/crawlBlog.ts",
     "crawlDash": "vite-node scripts/crawlDash.ts",
     "crawlRecovery": "vite-node scripts/crawlRecovery.ts",
