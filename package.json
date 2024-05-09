@@ -25,7 +25,7 @@
       "types": "./lib/index.d.ts"
     },
     "./db": {
-      "node": "./lib/db.js",
+      "import": "./lib/db.js",
       "types": "./lib/db.d.ts"
     }
   },
