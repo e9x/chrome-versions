@@ -4,9 +4,14 @@
 
 /**
  * Release channel
- * @see {@link https://source.chromium.org/chromiumos/chromiumos/codesearch/+/main:gen/arm-generic/chroot/build/arm-generic/usr/share/protofiles/chrome_device_policy.proto;drc=e531e3b49389e722fca84e2a8a8dfa7df591c01f;l=90}
+ * @see {@link https://source.chromium.org/chromiumos/chromiumos/codesearch/+/main:src/chromium/src/components/policy/proto/chrome_device_policy.proto}
  */
-export type cros_channel = "stable-channel" | "beta-channel" | "dev-channel";
+export type cros_channel =
+  | "stable-channel"
+  | "beta-channel"
+  | "dev-channel"
+  | "ltc-channel"
+  | "lts-channel";
 
 export interface cros_build {
   /** CrOS platform version (e.g. 15117.41.0) */
@@ -15,6 +20,11 @@ export interface cros_build {
   chrome: string;
   channel: cros_channel;
 }
+
+/**
+ * array of valid release channel IDs
+ */
+export const validChannels: cros_channel[];
 
 /**
  * @see {@link|https://www.chromium.org/chromium-os/firmware-porting-guide/2-concepts/#firmware-development}
