@@ -465,6 +465,28 @@ async function* getBlogspot(blogId: string) {
             }
           }
 
+          // more recent stable versions
+          {
+            const res = content.match(
+              /the stable channel is being updated to os version: ([\d.]+) browser version: ([\d.]+)/i,
+            );
+
+            if (res) {
+              let [, platform, chrome] = res;
+
+              const build = {
+                channel: "stable-channel",
+                chrome,
+                platform,
+              };
+
+              if (testBuild(build)) yield build;
+
+              continue;
+            }
+          }
+
+          // recent
           {
             const res = content.match(
               /(the (?:(?:stable|beta|dev)(?: and )?)+) channels? (?:(?:(?:has|have) been|is being) (?:updated|released) to (?:chrome versions?:? )?)?([\d\s.,/]+) ?\(platform versions?:? ([\d\s.,/]+)\)?/i,
