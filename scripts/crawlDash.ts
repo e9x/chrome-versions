@@ -13,6 +13,7 @@ import {
   insertManyTargets,
   insertManyBrands,
   insertManyBuilds,
+  channelNameToId,
 } from "./dbOp.js";
 import fetch from "node-fetch";
 
@@ -105,6 +106,27 @@ for (const board in json.builds) {
         throw new Error(`Invalid build: ${JSON.stringify(build)}`);
 
       builds.push(build);
+
+      // some builds don't even get a recovery image...
+      if (key in model.pushRecoveries) {
+        // there's already a recovery image in the pushRecoveries array
+        // and google is lying to us, release.version is the wrong platform version...
+        const working_img = parseRecoveryURL(model.pushRecoveries[key]);
+
+        if (build.platform !== working_img.platform) {
+          // console.warn("PLATFORM WAS DIFFERENT IN PUSH RECOVERY IMG");
+          const recoBuild = {
+            chrome: release.chromeVersion,
+            channel: channelNameToId(working_img.channel),
+            platform: working_img.platform,
+          };
+
+          if (!isValidBuild(recoBuild))
+            throw new Error(`Invalid build: ${JSON.stringify(recoBuild)}`);
+
+          builds.push(recoBuild);
+        }
+      }
     }
 
     for (const push in model.pushRecoveries)
