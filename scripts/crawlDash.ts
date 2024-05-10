@@ -21,13 +21,6 @@ const targets: cros_target[] = [];
 const builds: cros_build[] = [];
 const brands: cros_brand[] = [];
 
-// we use the fetch endpoint... Google has hidden the recovery urls!
-const res = await fetch(
-  "https://chromiumdash.appspot.com/cros/fetch_serving_builds?deviceCategory=Chrome%20OS",
-);
-
-if (!res.ok) throw new Error("Fetching CSV was not OK.");
-
 interface FetchedBuild {
   chromeVersion: string;
   comparedToMostCommon: number;
@@ -58,161 +51,166 @@ interface FetchedData {
   enterprisePins: number[];
 }
 
-const json = (await res.json()) as FetchedData;
+for (const url of [
+  "https://chromiumdash.appspot.com/cros/fetch_serving_builds?deviceCategory=Google%20Meet%20Hardware",
+  "https://chromiumdash.appspot.com/cros/fetch_serving_builds?deviceCategory=Chrome%20OS",
+]) {
+  const res = await fetch(url);
 
-const dataContainsModels = (
-  data: FetchedModel | FetchedModels,
-): data is FetchedModels => "models" in data;
+  if (!res.ok) throw new Error("Fetching CSV was not OK.");
 
-for (const board in json.builds) {
-  const boardData = json.builds[board];
+  const json = (await res.json()) as FetchedData;
 
-  let mp_key_max = 1; // start at 1
-  let mp_token = "mp";
+  for (const board in json.builds) {
+    const boardData = json.builds[board];
 
-  const readPushRecovery = (image: string) => {
-    // can't scrape the build because we only get the major chrome version number
-    // but we can extract mp token and mp key max
-    const parsed = parseRecoveryURL(image);
-    if (mp_key_max < parsed.mp_key) mp_key_max = parsed.mp_key;
-    mp_token = parsed.mp_token;
-  };
+    let mp_key_max = 1; // start at 1
+    let mp_token = "mp";
 
-  const readServings = (model: FetchedModel) => {
-    for (const brand of model.brandNames) brands.push({ board, brand });
+    const readPushRecovery = (image: string) => {
+      // can't scrape the build because we only get the major chrome version number
+      // but we can extract mp token and mp key max
+      const parsed = parseRecoveryURL(image);
+      if (mp_key_max < parsed.mp_key) mp_key_max = parsed.mp_key;
+      mp_token = parsed.mp_token;
+    };
 
-    for (const key in model) {
-      const n = Number(key);
-      if (
-        isNaN(n) ||
-        typeof model[key] !== "object" ||
-        model[key] === null ||
-        !("chromeVersion" in model[key])
-      )
-        continue;
-      const release = model[key] as {
-        chromeVersion: string;
-        comparedToMostCommon: number;
-        version: string;
-      };
+    const readServings = (model: FetchedModel) => {
+      for (const brand of model.brandNames) brands.push({ board, brand });
 
-      const build = {
-        chrome: release.chromeVersion,
-        channel: "stable-channel",
-        platform: release.version,
-      };
+      for (const key in model) {
+        const n = Number(key);
+        if (
+          isNaN(n) ||
+          typeof model[key] !== "object" ||
+          model[key] === null ||
+          !("chromeVersion" in model[key])
+        )
+          continue;
+        const release = model[key] as {
+          chromeVersion: string;
+          comparedToMostCommon: number;
+          version: string;
+        };
 
-      if (!isValidBuild(build))
-        throw new Error(`Invalid build: ${JSON.stringify(build)}`);
+        const build = {
+          chrome: release.chromeVersion,
+          channel: "stable-channel",
+          platform: release.version,
+        };
 
-      builds.push(build);
+        if (!isValidBuild(build))
+          throw new Error(`Invalid build: ${JSON.stringify(build)}`);
 
-      // some builds don't even get a recovery image...
-      if (key in model.pushRecoveries) {
-        // there's already a recovery image in the pushRecoveries array
-        // and google is lying to us, release.version is the wrong platform version...
-        const working_img = parseRecoveryURL(model.pushRecoveries[key]);
+        builds.push(build);
 
-        if (build.platform !== working_img.platform) {
-          // console.warn("PLATFORM WAS DIFFERENT IN PUSH RECOVERY IMG");
-          const recoBuild = {
-            chrome: release.chromeVersion,
-            channel: channelNameToId(working_img.channel),
-            platform: working_img.platform,
-          };
+        // some builds don't even get a recovery image...
+        if (key in model.pushRecoveries) {
+          // there's already a recovery image in the pushRecoveries array
+          // and google is lying to us, release.version is the wrong platform version...
+          const working_img = parseRecoveryURL(model.pushRecoveries[key]);
 
-          if (!isValidBuild(recoBuild))
-            throw new Error(`Invalid build: ${JSON.stringify(recoBuild)}`);
+          if (build.platform !== working_img.platform) {
+            // console.warn("PLATFORM WAS DIFFERENT IN PUSH RECOVERY IMG");
+            const recoBuild = {
+              chrome: release.chromeVersion,
+              channel: channelNameToId(working_img.channel),
+              platform: working_img.platform,
+            };
 
-          builds.push(recoBuild);
+            if (!isValidBuild(recoBuild))
+              throw new Error(`Invalid build: ${JSON.stringify(recoBuild)}`);
+
+            builds.push(recoBuild);
+          }
         }
       }
+
+      for (const push in model.pushRecoveries)
+        readPushRecovery(model.pushRecoveries[push]);
+
+      if (model.servingStable) {
+        const build = {
+          chrome: model.servingStable.chromeVersion,
+          channel: "stable-channel",
+          platform: model.servingStable.version,
+        };
+
+        if (!isValidBuild(build))
+          throw new Error(`Invalid build: ${JSON.stringify(build)}`);
+
+        builds.push(build);
+      }
+
+      if (model.servingBeta) {
+        const build = {
+          chrome: model.servingBeta.chromeVersion,
+          channel: "beta-channel",
+          platform: model.servingBeta.version,
+        };
+
+        if (!isValidBuild(build))
+          throw new Error(`Invalid build: ${JSON.stringify(build)}`);
+
+        builds.push(build);
+      }
+
+      if (model.servingDev) {
+        const build = {
+          chrome: model.servingDev.chromeVersion,
+          channel: "dev-channel",
+          platform: model.servingDev.version,
+        };
+
+        if (!isValidBuild(build))
+          throw new Error(`Invalid build: ${JSON.stringify(build)}`);
+
+        builds.push(build);
+      }
+
+      if (model.servingLtc) {
+        const build = {
+          chrome: model.servingLtc.chromeVersion,
+          channel: "ltc-channel",
+          platform: model.servingLtc.version,
+        };
+
+        if (!isValidBuild(build))
+          throw new Error(`Invalid build: ${JSON.stringify(build)}`);
+
+        builds.push(build);
+      }
+
+      if (model.servingLtr) {
+        // LTS
+        const build = {
+          chrome: model.servingLtr.chromeVersion,
+          channel: "lts-channel",
+          platform: model.servingLtr.version,
+        };
+
+        if (!isValidBuild(build))
+          throw new Error(`Invalid build: ${JSON.stringify(build)}`);
+
+        builds.push(build);
+      }
+    };
+
+    if ("models" in boardData)
+      for (const model in boardData.models) {
+        const modelData = boardData.models[model];
+        readServings(modelData);
+      }
+    else {
+      readServings(boardData);
     }
 
-    for (const push in model.pushRecoveries)
-      readPushRecovery(model.pushRecoveries[push]);
-
-    if (model.servingStable) {
-      const build = {
-        chrome: model.servingStable.chromeVersion,
-        channel: "stable-channel",
-        platform: model.servingStable.version,
-      };
-
-      if (!isValidBuild(build))
-        throw new Error(`Invalid build: ${JSON.stringify(build)}`);
-
-      builds.push(build);
-    }
-
-    if (model.servingBeta) {
-      const build = {
-        chrome: model.servingBeta.chromeVersion,
-        channel: "beta-channel",
-        platform: model.servingBeta.version,
-      };
-
-      if (!isValidBuild(build))
-        throw new Error(`Invalid build: ${JSON.stringify(build)}`);
-
-      builds.push(build);
-    }
-
-    if (model.servingDev) {
-      const build = {
-        chrome: model.servingDev.chromeVersion,
-        channel: "dev-channel",
-        platform: model.servingDev.version,
-      };
-
-      if (!isValidBuild(build))
-        throw new Error(`Invalid build: ${JSON.stringify(build)}`);
-
-      builds.push(build);
-    }
-
-    if (model.servingLtc) {
-      const build = {
-        chrome: model.servingLtc.chromeVersion,
-        channel: "ltc-channel",
-        platform: model.servingLtc.version,
-      };
-
-      if (!isValidBuild(build))
-        throw new Error(`Invalid build: ${JSON.stringify(build)}`);
-
-      builds.push(build);
-    }
-
-    if (model.servingLtr) {
-      // LTS
-      const build = {
-        chrome: model.servingLtr.chromeVersion,
-        channel: "lts-channel",
-        platform: model.servingLtr.version,
-      };
-
-      if (!isValidBuild(build))
-        throw new Error(`Invalid build: ${JSON.stringify(build)}`);
-
-      builds.push(build);
-    }
-  };
-
-  if (dataContainsModels(boardData))
-    for (const model in boardData.models) {
-      const modelData = boardData.models[model];
-      readServings(modelData);
-    }
-  else {
-    readServings(boardData);
+    targets.push({
+      board,
+      mp_token,
+      mp_key_max,
+    });
   }
-
-  targets.push({
-    board,
-    mp_token,
-    mp_key_max,
-  });
 }
 
 console.log("Found", targets.length, "targets");
