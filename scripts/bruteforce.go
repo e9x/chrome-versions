@@ -295,7 +295,7 @@ func main() {
 								// os.Exit(1)
 							}
 
-							if res.StatusCode != 200 {
+							if res.StatusCode == 404 {
 								ch <- nil
 							} else {
 								r := cros_recovery_image_db{img: img, chrome: build.chrome}
@@ -330,49 +330,51 @@ func main() {
 	for range targets {
 		new_data := <-target_ch
 
-		fmt.Println("TARGET", new_data.name, "COMPLETE")
+		if new_data != nil {
+			fmt.Println("TARGET", new_data.name, "COMPLETE")
 
-		tx, err := db.Begin()
-		if err != nil {
-			fmt.Fprintf(os.Stderr, "tx: %v\n", err)
-			os.Exit(1)
-		}
-
-		insert_attempt, err := tx.Prepare("INSERT INTO bruteforce_attempt (board,platform,mp_key) VALUES (?,?,?)")
-		if err != nil {
-			fmt.Fprintf(os.Stderr, "insert_attempt: %v\n", err)
-			os.Exit(1)
-		}
-
-		insert_img, err := tx.Prepare("INSERT OR IGNORE INTO cros_recovery_image (board,platform,chrome,mp_token,mp_key,channel,last_modified) VALUES (?,?,?,?,?,?,?)")
-		if err != nil {
-			fmt.Fprintf(os.Stderr, "insert_img: %v\n", err)
-			os.Exit(1)
-		}
-
-		for _, i := range new_data.images {
-			fmt.Println("FOUND", i.img.URL(false), i.lastModified)
-			_, err := insert_img.Exec(i.img.board, i.img.platform, i.chrome, i.img.mp_token, i.img.mp_key, i.img.channel, i.lastModified)
+			tx, err := db.Begin()
 			if err != nil {
-				fmt.Fprintf(os.Stderr, "insert cros_recovery_image: %v\n", err)
+				fmt.Fprintf(os.Stderr, "tx: %v\n", err)
 				os.Exit(1)
 			}
-			// fmt.Println(r.RowsAffected())
-		}
 
-		for _, attempt := range new_data.attempts {
-			_, err := insert_attempt.Exec(attempt.board, attempt.platform, attempt.mp_key)
+			insert_attempt, err := tx.Prepare("INSERT INTO bruteforce_attempt (board,platform,mp_key) VALUES (?,?,?)")
 			if err != nil {
-				fmt.Fprintf(os.Stderr, "insert bruteforce_attempt: %v, vals %s %s %d\n", err, attempt.board, attempt.platform, attempt.mp_key)
+				fmt.Fprintf(os.Stderr, "insert_attempt: %v\n", err)
 				os.Exit(1)
 			}
-			// fmt.Println(r.RowsAffected())
-		}
 
-		err = tx.Commit()
-		if err != nil {
-			fmt.Fprintf(os.Stderr, "tx commit: %v\n", err)
-			os.Exit(1)
+			insert_img, err := tx.Prepare("INSERT OR IGNORE INTO cros_recovery_image (board,platform,chrome,mp_token,mp_key,channel,last_modified) VALUES (?,?,?,?,?,?,?)")
+			if err != nil {
+				fmt.Fprintf(os.Stderr, "insert_img: %v\n", err)
+				os.Exit(1)
+			}
+
+			for _, i := range new_data.images {
+				fmt.Println("FOUND", i.img.URL(false), i.lastModified)
+				_, err := insert_img.Exec(i.img.board, i.img.platform, i.chrome, i.img.mp_token, i.img.mp_key, i.img.channel, i.lastModified)
+				if err != nil {
+					fmt.Fprintf(os.Stderr, "insert cros_recovery_image: %v\n", err)
+					os.Exit(1)
+				}
+				// fmt.Println(r.RowsAffected())
+			}
+
+			for _, attempt := range new_data.attempts {
+				_, err := insert_attempt.Exec(attempt.board, attempt.platform, attempt.mp_key)
+				if err != nil {
+					fmt.Fprintf(os.Stderr, "insert bruteforce_attempt: %v, vals %s %s %d\n", err, attempt.board, attempt.platform, attempt.mp_key)
+					os.Exit(1)
+				}
+				// fmt.Println(r.RowsAffected())
+			}
+
+			err = tx.Commit()
+			if err != nil {
+				fmt.Fprintf(os.Stderr, "tx commit: %v\n", err)
+				os.Exit(1)
+			}
 		}
 	}
 
