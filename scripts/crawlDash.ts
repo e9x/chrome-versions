@@ -7,6 +7,7 @@
  * for example, running crawlBlog will miss the non-scrubbed v92 platform version: 13982.88.0
  */
 
+import { readFile } from "node:fs/promises";
 import { isValidBuild, parseRecoveryURL } from "../lib/index.js";
 import type { cros_brand, cros_build, cros_target } from "../lib/index.js";
 import {
@@ -51,18 +52,31 @@ interface FetchedData {
   enterprisePins: number[];
 }
 
-for (const url of [
-  "https://chromiumdash.appspot.com/cros/fetch_serving_builds?deviceCategory=Google%20Meet%20Hardware",
-  "https://chromiumdash.appspot.com/cros/fetch_serving_builds?deviceCategory=Chrome%20OS",
-]) {
-  const res = await fetch(url);
+const [, , sourceFile] = process.argv;
 
-  if (!res.ok) throw new Error("Fetching CSV was not OK.");
+if (sourceFile) {
+  console.log("Loading fetch_serving_builds from file", sourceFile);
+  const data = await readFile(sourceFile, "utf-8");
+  crawlDash(JSON.parse(data));
+} else {
+  console.log("Downloading fetch_serving_builds");
+  for (const url of [
+    "https://chromiumdash.appspot.com/cros/fetch_serving_builds?deviceCategory=Google%20Meet%20Hardware",
+    "https://chromiumdash.appspot.com/cros/fetch_serving_builds?deviceCategory=Chrome%20OS",
+  ]) {
+    const res = await fetch(url);
 
-  const json = (await res.json()) as FetchedData;
+    if (!res.ok) throw new Error("Fetching CSV was not OK.");
 
-  for (const board in json.builds) {
-    const boardData = json.builds[board];
+    const json = (await res.json()) as FetchedData;
+
+    await crawlDash(json);
+  }
+}
+
+async function crawlDash(data: FetchedData) {
+  for (const board in data.builds) {
+    const boardData = data.builds[board];
 
     let mp_key_max = 1; // start at 1
     let mp_token = "mp";
