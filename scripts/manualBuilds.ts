@@ -1,5 +1,5 @@
-import type { cros_build } from "../lib/index.js";
-import { insertManyBuilds } from "./dbOp.js";
+import type { cros_build, cros_target } from "../lib/index.js";
+import { insertManyBuilds, insertManyTargets } from "./dbOp.js";
 
 const builds: cros_build[] = [
   {
@@ -90,6 +90,13 @@ const builds: cros_build[] = [
   },
 ];
 
+const targets: cros_target[] = [
+  { board: "x86-alex", mp_token: "alex-mp", mp_key_max: 4 },
+  { board: "x86-zgb", mp_token: "zgb-mp", mp_key_max: 3 },
+];
+
 console.log("Found", builds.length, "builds");
+console.log("Found", targets.length, "targets");
 
 insertManyBuilds(builds);
+insertManyTargets(targets);
