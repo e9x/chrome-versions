@@ -1,12 +1,7 @@
 import { config } from "dotenv";
-import type { cros_build, cros_channel } from "../lib/index";
-import {
-  isValidBuild,
-  parseChromeVersion,
-  parsePlatformVersion,
-} from "../lib/index.js";
+import type { cros_build } from "../lib/index";
 import type { BloggerPostList } from "./Blogger";
-import { insertManyBuilds } from "./dbOp.js";
+import { channelNameToId, insertManyBuilds, testBuild } from "./dbOp.js";
 import fetch from "node-fetch";
 import { stripHtml } from "string-strip-html";
 
@@ -17,23 +12,6 @@ config();
 const googleAPIKey = process.env.BLOGGER_API_KEY || "";
 if (!googleAPIKey)
   throw new Error("You must specify an API key for blogger. (BLOGGER_API_KEY)");
-
-const channelNameToId = (name: string) =>
-  `${name.toLowerCase()}-channel` as cros_channel;
-
-const testBuild = (build: unknown): build is cros_build => {
-  if (!isValidBuild(build))
-    throw new Error(`Invalid build: ${JSON.stringify(build)}`);
-
-  try {
-    parseChromeVersion(build.chrome);
-    parsePlatformVersion(build.platform);
-    return true;
-  } catch (err) {
-    // non-fatal error
-    return false;
-  }
-};
 
 async function* getBlogspot(blogId: string) {
   // if a version is released while we're scraping

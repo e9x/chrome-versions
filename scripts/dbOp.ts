@@ -1,10 +1,14 @@
 import { chromeDBPath } from "../lib/db.js";
-import type {
-  bruteforce_attempt,
-  cros_brand,
-  cros_build,
-  cros_recovery_image_db,
-  cros_target,
+import {
+  cros_channel,
+  isValidBuild,
+  parseChromeVersion,
+  parsePlatformVersion,
+  type bruteforce_attempt,
+  type cros_brand,
+  type cros_build,
+  type cros_recovery_image_db,
+  type cros_target,
 } from "../lib/index.js";
 import Database from "better-sqlite3";
 
@@ -98,3 +102,21 @@ export const insertManyBruteforceAttempt = db.transaction(
       );
   },
 );
+
+export const channelNameToId = (name: string) =>
+  `${name.toLowerCase()}-channel` as cros_channel;
+
+// util for crawler scripts
+export const testBuild = (build: unknown): build is cros_build => {
+  if (!isValidBuild(build))
+    throw new Error(`Invalid build: ${JSON.stringify(build)}`);
+
+  try {
+    parseChromeVersion(build.chrome);
+    parsePlatformVersion(build.platform);
+    return true;
+  } catch (err) {
+    // non-fatal error
+    return false;
+  }
+};

@@ -1,9 +1,11 @@
 import type { cros_brand, cros_build, cros_target } from "../lib/index";
 import { parseRecoveryURL } from "../lib/index.js";
 import {
+  channelNameToId,
   insertManyBrands,
   insertManyBuilds,
   insertManyTargets,
+  testBuild,
 } from "./dbOp.js";
 import fetch from "node-fetch";
 
@@ -48,12 +50,15 @@ const builds: cros_build[] = [];
 for (const target of recoveryTargets) {
   const parsedImg = parseRecoveryURL(target.url);
 
-  if (target.chrome_version)
-    builds.push({
-      channel: parsedImg.channel,
+  if (target.chrome_version) {
+    const build = {
+      channel: channelNameToId(parsedImg.channel),
       chrome: target.chrome_version,
       platform: parsedImg.platform,
-    });
+    };
+
+    if (testBuild(build)) builds.push(build);
+  }
 
   // assume mp_token is the max bc the json is the latest
   targets.push({
