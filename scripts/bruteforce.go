@@ -278,7 +278,7 @@ func main() {
 						}
 
 						// fmt.Println("fetching", img.URL(false))
-						req, err := http.NewRequest("HEAD", img.URL(false), nil)
+						req, err := http.NewRequest("HEAD", img.URL(true), nil)
 						// req host header is already set so we can just set the IP
 						req.Host = ips[0].String()
 
