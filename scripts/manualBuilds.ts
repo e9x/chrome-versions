@@ -88,6 +88,11 @@ const builds: cros_build[] = [
     chrome: "75.0.3770.129",
     platform: "12105.90.0",
   },
+  {
+    channel: "stable-channel",
+    chrome: "63.0.3239.140",
+    platform: "10032.86.0",
+  },
 ];
 
 const targets: cros_target[] = [
