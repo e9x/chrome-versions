@@ -446,14 +446,35 @@ async function* getBlogspot(blogId: string) {
           // more recent stable versions
           {
             const res = content.match(
-              /the stable channel is being updated to os version: ([\d.]+) browser version: ([\d.]+)/i,
+              /the (stable|beta|dev) channel is being updated to os version: ([\d.]+)(?: ,)? browser version: ([\d.]+)/i,
             );
 
             if (res) {
-              let [, platform, chrome] = res;
+              let [, channel, platform, chrome] = res;
 
               const build = {
-                channel: "stable-channel",
+                channel: channelNameToId(channel),
+                chrome,
+                platform,
+              };
+
+              if (testBuild(build)) yield build;
+
+              continue;
+            }
+          }
+
+          // more recent dev version
+          {
+            const res = content.match(
+              /the (stable|beta|dev) channel is being updated to os version ([\d.]+)(?: ,)? \(platform version ([\d.]+)\)/i,
+            );
+
+            if (res) {
+              let [, channel, chrome, platform] = res;
+
+              const build = {
+                channel: channelNameToId(channel),
                 chrome,
                 platform,
               };
