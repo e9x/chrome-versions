@@ -59,8 +59,6 @@ Stats involved in the making of v1.0.1:
 - 105825 **predicted** requests (requests that haven't failed)
 - 118626 **real** requests (requests that may have been retried due to the initial failing)
 
-You may want to pass `SKIP_CHECK_REDUNDANCY=true` when updating the database.
-
 ```sh
-npm run bruteforce
+go run ./scripts/bruteforce.go
 ```
