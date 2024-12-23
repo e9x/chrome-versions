@@ -32,7 +32,7 @@ npm run manualBuilds
 5. Run the Blogspot crawler
 
 ```sh
-npm run crawlBlog <YOUR API KEY>
+npm run crawlBlog
 ```
 
 6. Run the Chromium Dash crawler

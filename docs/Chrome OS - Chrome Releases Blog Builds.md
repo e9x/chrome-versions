@@ -48,10 +48,16 @@ This will erase the previous database, if it exists.
 npm run init
 ```
 
-5. Run the crawler
+5. Create a `.env` file containing the following:
+
+```
+BLOGGER_API_KEY=<YOUR API KEY>
+```
+
+6. Run the crawler
 
 ```sh
-npm run crawlBlog <YOUR API KEY>
+npm run crawlBlog
 ```
 
 You now have 1-2 decades of Chrome OS builds. This data can be found in the `cros_build` table in `dist/chrome.db`.
